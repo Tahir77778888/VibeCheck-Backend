@@ -2,96 +2,71 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Rating = require('../models/Rating');
-const upload = require('../config/cloudinary');
 
-// Route 1: Naya user create karna (POST /api/users/create)
+// Route 1: Naya Account Banana (POST /api/users/create)
 router.post('/create', async (req, res) => {
     try {
-        const { username, name } = req.body;
+        const { name, username } = req.body;
 
+        // Check karna ki username pehle se toh nahi hai
         const existingUser = await User.findOne({ username });
         if (existingUser) {
-            return res.status(400).json({ message: "Bhai yeh username pehle se kisi ne le liya hai! Koi aur try karo." });
+            return res.status(400).json({ message: "Username already taken bhai." });
         }
 
-        const newUser = new User({ username, name });
+        const newUser = new User({ name, username });
         await newUser.save();
 
-        res.status(201).json({
-            message: "Profile successfully ban gayi! 🚀",
-            user: newUser,
-            shareableLink: `https://vibecheck.me/${username}`
-        });
-
+        res.status(201).json({ message: "Account ekdum mast ban gaya!", user: newUser });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 });
 
-// Route 2: Profile photo upload karna (POST /api/users/:username/upload)
-router.post('/:username/upload', upload.single('profilePic'), async (req, res) => {
-    try {
-        const user = await User.findOne({ username: req.params.username });
-        if (!user) {
-            return res.status(404).json({ message: "Bhai yeh user toh exist hi nahi karta!" });
-        }
-
-        if (!req.file) {
-            return res.status(400).json({ message: "Koi photo upload nahi hui!" });
-        }
-
-        // Cloudinary ka secure URL user ki profile mein save kar rahe hain
-        user.profilePic = req.file.path;
-        await user.save();
-
-        res.status(200).json({
-            message: "Profile photo ekdum mast set ho gayi! 📸",
-            profilePicUrl: user.profilePic
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-});
-
-// Route 3: Kisi user ki profile aur uski saari ratings dekhna (GET /api/users/:username)
+// Route 2: Profile aur saare Secret Comments fetch karna (GET /api/users/:username)
 router.get('/:username', async (req, res) => {
     try {
+        // 1. User ko database mein dhundo
         const user = await User.findOne({ username: req.params.username });
         if (!user) {
-            return res.status(404).json({ message: "Bhai yeh user toh exist hi nahi karta!" });
+            return res.status(404).json({ message: "User not found" });
         }
 
-        const ratings = await Rating.find({ userId: user._id });
+        // 2. Is user ke saare secret ratings aur comments dhundo (Naye comments pehle dikhenge)
+        const ratings = await Rating.find({ userId: user._id }).sort({ createdAt: -1 });
 
-        let avgScores = { trust: 0, vibe: 0, intellect: 0, humor: 0, overall: 0 };
+        // 3. Average scores calculate karo
+        let averageScores = { trust: 50, vibe: 50, intellect: 50, humor: 50 };
 
         if (ratings.length > 0) {
+            let total = { trust: 0, vibe: 0, intellect: 0, humor: 0 };
             ratings.forEach(r => {
-                avgScores.trust += r.scores.trust;
-                avgScores.vibe += r.scores.vibe;
-                avgScores.intellect += r.scores.intellect;
-                avgScores.humor += r.scores.humor;
+                total.trust += r.scores.trust || 0;
+                total.vibe += r.scores.vibe || 0;
+                total.intellect += r.scores.intellect || 0;
+                total.humor += r.scores.humor || 0;
             });
 
-            avgScores.trust = Math.round(avgScores.trust / ratings.length);
-            avgScores.vibe = Math.round(avgScores.vibe / ratings.length);
-            avgScores.intellect = Math.round(avgScores.intellect / ratings.length);
-            avgScores.humor = Math.round(avgScores.humor / ratings.length);
-
-            avgScores.overall = Math.round((avgScores.trust + avgScores.vibe + avgScores.intellect + avgScores.humor) / 4);
+            // Math.round se exact integer value aayegi
+            averageScores = {
+                trust: Math.round(total.trust / ratings.length),
+                vibe: Math.round(total.vibe / ratings.length),
+                intellect: Math.round(total.intellect / ratings.length),
+                humor: Math.round(total.humor / ratings.length)
+            };
         }
 
-        res.status(200).json({
+        // 4. Sab kuch ek sath frontend ko bhej do
+        res.json({
             user: user,
-            totalRatings: ratings.length,
-            averageScores: avgScores,
-            allRatings: ratings
+            averageScores: averageScores,
+            ratings: ratings // <-- Secret comments ab yahan se jayenge!
         });
 
     } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        console.error(error);
+        res.status(500).json({ message: "Server error in fetching profile", error: error.message });
     }
 });
 
-// Yeh hamesha sabse last line honi chahiye!
 module.exports = router;
