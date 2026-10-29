@@ -18,14 +18,13 @@ function Home() {
 
     setIsLoading(true);
     try {
-      // Backend ke create route par request bhej rahe hain
-      await axios.post('http://localhost:5000/api/users/create', {
+      // Backend ke live create route par request bhej rahe hain
+      await axios.post('https://vibecheck-backend-n4yi.onrender.com/api/users/create', {
         name: name,
-        username: username.toLowerCase().replace(/\s+/g, '_') // Space ko underscore mein badal dega
+        username: username.toLowerCase().replace(/\s+/g, '_')
       });
 
       alert("Account ekdum mast ban gaya! 🚀");
-      // Account bante hi user ko uski nayi profile par bhej do
       navigate(`/${username.toLowerCase().replace(/\s+/g, '_')}`);
 
     } catch (error) {
@@ -94,7 +93,8 @@ function Profile() {
   }, [username]);
 
   const fetchProfile = () => {
-    axios.get(`http://localhost:5000/api/users/${username}`)
+    // Live backend link updated here
+    axios.get(`https://vibecheck-backend-n4yi.onrender.com/api/users/${username}`)
       .then((response) => setUserData(response.data))
       .catch((error) => {
         console.error("User nahi mila:", error);
@@ -115,7 +115,8 @@ function Profile() {
 
     setIsUploading(true);
     try {
-      await axios.post(`http://localhost:5000/api/users/${username}/upload`, formData, {
+      // Live backend link updated here
+      await axios.post(`https://vibecheck-backend-n4yi.onrender.com/api/users/${username}/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       fetchProfile();
@@ -137,7 +138,8 @@ function Profile() {
         scores: { trust: ratings.trust, vibe: ratings.vibe, intellect: ratings.intellect, humor: ratings.humor },
         comment: "Frontend se Anonymous Vibe Check! 🔥"
       };
-      await axios.post('http://localhost:5000/api/ratings/submit', payload);
+      // Live backend link updated here
+      await axios.post('https://vibecheck-backend-n4yi.onrender.com/api/ratings/submit', payload);
       alert("Vibe Check Submitted! 🔥");
       fetchProfile();
     } catch (error) {
