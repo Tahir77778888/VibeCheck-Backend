@@ -6,19 +6,20 @@ const User = require('../models/User');
 // Route: Kisi user ko anonymous rate karna (POST /api/ratings/submit)
 router.post('/submit', async (req, res) => {
     try {
-        const { username, scores, comment } = req.body;
+        // Yahan dhyan se dekho, humne 'polls' ko bhi req.body se nikal liya hai
+        const { username, scores, comment, polls } = req.body;
 
-        // 1. Pehle check karo ki jisko rate kar rahe hain wo user exist karta hai ya nahi
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(404).json({ message: "Bhai yeh user toh exist hi nahi karta!" });
         }
 
-        // 2. Nayi anonymous rating save karo
+        // Nayi anonymous rating save karo, isme polls bhi daal diye
         const newRating = new Rating({
             userId: user._id,
             scores: scores,
-            comment: comment
+            comment: comment,
+            polls: polls // <-- Naya poll data yahan se database mein jayega
         });
 
         await newRating.save();
