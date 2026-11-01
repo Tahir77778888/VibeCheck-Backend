@@ -124,16 +124,37 @@ function Profile() {
       {userData && userData.user ? (
         <div style={{ width: '100%', maxWidth: '850px', display: 'flex', flexDirection: 'column', gap: '30px', margin: '0 auto' }}>
 
-          {/* TOP BANNER */}
-          <div style={{ textAlign: 'center', backgroundColor: '#151515', padding: '30px', borderRadius: '24px', border: '1px solid #2a2a2a' }}>
+          {/* TOP BANNER: NAME, TITLE & SHARE BUTTON */}
+          <div style={{ textAlign: 'center', backgroundColor: '#151515', padding: '30px', borderRadius: '24px', border: '1px solid #2a2a2a', position: 'relative' }}>
             <img src={userData.user.profilePic || 'https://via.placeholder.com/150'} alt="Profile" onClick={() => !isUploading && fileInputRef.current.click()} style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #4facfe', cursor: 'pointer', marginBottom: '15px' }} />
             <h2 style={{ margin: '0 0 5px 0', fontSize: '26px' }}>{userData.user.name}</h2>
             <p style={{ color: '#888', margin: '0 0 15px 0' }}>@{userData.user.username}</p>
-            <div style={{ display: 'inline-block', padding: '6px 18px', backgroundColor: 'rgba(79, 172, 254, 0.1)', border: '1px solid #4facfe', borderRadius: '20px', color: '#4facfe', fontSize: '14px', fontWeight: 'bold' }}>
-              {getVibeTitle(userData.averageScores)}
+
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ padding: '8px 20px', backgroundColor: 'rgba(79, 172, 254, 0.1)', border: '1px solid #4facfe', borderRadius: '20px', color: '#4facfe', fontSize: '14px', fontWeight: 'bold' }}>
+                {getVibeTitle(userData.averageScores)}
+              </div>
+
+              {/* NAYA SHARE BUTTON */}
+              <button
+                onClick={() => {
+                  const url = window.location.href;
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'Rate My Vibe! ✨',
+                      text: 'Spill the tea! Rate my vibe and drop a secret message anonymously 🤫👀',
+                      url: url,
+                    }).catch((err) => console.log('Error sharing', err));
+                  } else {
+                    navigator.clipboard.writeText(url);
+                    alert("Link copied! 📋 Paste it on your Instagram story!");
+                  }
+                }}
+                style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)', color: 'white', border: 'none', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(255,8,68,0.3)' }}>
+                Share on Insta 📸
+              </button>
             </div>
           </div>
-
           {/* TWO COLUMN LAYOUT */}
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
 
