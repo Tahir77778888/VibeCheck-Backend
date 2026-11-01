@@ -92,7 +92,7 @@ function Profile() {
         username: username,
         scores: ratings,
         comment: userComment || "Silent observer... 👀",
-        polls: polls // Naye poll answers
+        polls: polls
       });
       alert("Vibe Check Submitted Anonymously! 🤫");
       setUserComment("");
@@ -185,14 +185,31 @@ function Profile() {
             </div>
           </div>
 
-          {/* SECRET INBOX (Full Width at Bottom) */}
+          {/* SECRET INBOX */}
           <div style={{ backgroundColor: '#151515', padding: '30px', borderRadius: '24px', border: '1px solid #2a2a2a' }}>
             <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px' }}>Secret Inbox 💌 (Only you can see this)</h3>
             {userData.ratings && userData.ratings.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                 {userData.ratings.map((rating, index) => (
                   <div key={index} style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '12px', border: '1px solid #333' }}>
-                    <p style={{ margin: '0 0 10px 0', fontSize: '15px', color: '#fff' }}>"{rating.comment}"</p>
+                    <p style={{ margin: '0', fontSize: '15px', color: '#fff', fontStyle: 'italic' }}>"{rating.comment}"</p>
+
+                    {/* Yahan aapke chune hue Polls Tags ki tarah dikhenge */}
+                    {rating.polls && (rating.polls.redFlag || rating.polls.partyVibe) && (
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
+                        {rating.polls.redFlag && (
+                          <span style={{ fontSize: '12px', backgroundColor: 'rgba(255,8,68,0.1)', color: '#ff0844', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(255,8,68,0.3)', fontWeight: 'bold' }}>
+                            🚩 {rating.polls.redFlag}
+                          </span>
+                        )}
+                        {rating.polls.partyVibe && (
+                          <span style={{ fontSize: '12px', backgroundColor: 'rgba(79,172,254,0.1)', color: '#4facfe', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(79,172,254,0.3)', fontWeight: 'bold' }}>
+                            🪩 {rating.polls.partyVibe}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                   </div>
                 ))}
               </div>
