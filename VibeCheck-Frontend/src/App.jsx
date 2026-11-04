@@ -87,7 +87,8 @@ function Home() {
     </div>
   );
 }
-// ---------------- PROFILE COMPONENT ----------------
+
+// ---------------- PROFILE COMPONENT (Insta Dark Mode & Wholesome Vibe) ----------------
 function Profile() {
   const { username } = useParams();
   const [userData, setUserData] = useState(null);
@@ -123,10 +124,10 @@ function Profile() {
       await axios.post('https://vibecheck-backend-n4yi.onrender.com/api/ratings/submit', {
         username: username,
         scores: ratings,
-        comment: userComment || "Silent observer... 👀",
+        comment: userComment || "Sending good vibes! ✨",
         polls: polls
       });
-      alert("Vibe Check Submitted Anonymously! 🤫");
+      alert("Sent anonymously! 💌");
       setUserComment("");
       setPolls({ redFlag: '', partyVibe: '' });
       fetchProfile();
@@ -135,46 +136,29 @@ function Profile() {
     }
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('profilePic', file);
-    setIsUploading(true);
-    try {
-      await axios.post(`https://vibecheck-backend-n4yi.onrender.com/api/users/${username}/upload`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      fetchProfile();
-    } catch (error) {
-      alert("Photo upload failed.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', color: '#ffffff', fontFamily: "'Inter', sans-serif", display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '40px 20px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fafafa', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '20px 10px' }}>
       {userData && userData.user ? (
-        <div style={{ width: '100%', maxWidth: '850px', display: 'flex', flexDirection: 'column', gap: '30px', margin: '0 auto' }}>
+        <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', margin: '0 auto' }}>
 
-          {/* TOP BANNER: NAME, TITLE & SHARE BUTTON */}
-          <div style={{ textAlign: 'center', backgroundColor: '#151515', padding: '30px', borderRadius: '24px', border: '1px solid #2a2a2a', position: 'relative' }}>
-            <img src={userData.user.profilePic || 'https://via.placeholder.com/150'} alt="Profile" onClick={() => !isUploading && fileInputRef.current.click()} style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '4px solid #4facfe', cursor: 'pointer', marginBottom: '15px' }} />
-            <h2 style={{ margin: '0 0 5px 0', fontSize: '26px' }}>{userData.user.name}</h2>
-            <p style={{ color: '#888', margin: '0 0 15px 0' }}>@{userData.user.username}</p>
+          {/* TOP BANNER (Insta Profile Style) */}
+          <div style={{ textAlign: 'center', backgroundColor: '#121212', padding: '30px', borderRadius: '16px', border: '1px solid #262626', position: 'relative' }}>
+            <img src={userData.user.profilePic || 'https://via.placeholder.com/150'} alt="Profile" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #bc1888', padding: '3px', marginBottom: '15px' }} />
+            <h2 style={{ margin: '0 0 5px 0', fontSize: '22px', fontWeight: 'bold' }}>{userData.user.name}</h2>
+            <p style={{ color: '#a8a8a8', margin: '0 0 15px 0', fontSize: '14px' }}>@{userData.user.username}</p>
 
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ padding: '8px 20px', backgroundColor: 'rgba(79, 172, 254, 0.1)', border: '1px solid #4facfe', borderRadius: '20px', color: '#4facfe', fontSize: '14px', fontWeight: 'bold' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ padding: '6px 16px', backgroundColor: '#262626', borderRadius: '8px', color: '#fafafa', fontSize: '13px', fontWeight: '600' }}>
                 {getVibeTitle(userData.averageScores)}
               </div>
 
-              {/* NAYA SHARE BUTTON */}
               <button
                 onClick={() => {
                   const url = window.location.href;
                   if (navigator.share) {
                     navigator.share({
-                      title: 'Rate My Vibe! ✨',
-                      text: 'Spill the tea! Rate my vibe and drop a secret message anonymously 🤫👀',
+                      title: 'Hype me up! ✨',
+                      text: 'Drop a secret compliment or rate my vibe anonymously 💌',
                       url: url,
                     }).catch((err) => console.log('Error sharing', err));
                   } else {
@@ -182,103 +166,112 @@ function Profile() {
                     alert("Link copied! 📋 Paste it on your Instagram story!");
                   }
                 }}
-                style={{ padding: '8px 20px', background: 'linear-gradient(135deg, #ff0844 0%, #ffb199 100%)', color: 'white', border: 'none', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(255,8,68,0.3)' }}>
-                Share on Insta 📸
+                style={{ padding: '6px 16px', background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>
+                Share to Story
               </button>
             </div>
           </div>
-          {/* TWO COLUMN LAYOUT */}
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
 
-            {/* LEFT COLUMN: Sliders */}
-            <div style={{ flex: '1 1 350px', backgroundColor: '#151515', padding: '30px', borderRadius: '24px', border: '1px solid #2a2a2a' }}>
-              <h3 style={{ borderBottom: '1px solid #333', paddingBottom: '10px', marginBottom: '25px', marginTop: 0 }}>Rate My Vibe 👇</h3>
+          {/* HYPE FORM SECTION */}
+          <div style={{ backgroundColor: '#121212', padding: '25px', borderRadius: '16px', border: '1px solid #262626', display: 'flex', flexDirection: 'column', gap: '25px' }}>
+
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', borderBottom: '1px solid #262626', paddingBottom: '15px' }}>Hype {userData.user.name} Up 👇</h3>
+
+            {/* Sliders */}
+            <div>
               {['trust', 'vibe', 'intellect', 'humor'].map((trait) => (
-                <div key={trait} style={{ marginBottom: '25px' }}>
+                <div key={trait} style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ textTransform: 'capitalize', fontSize: '14px', color: '#aaa' }}>{trait}</span>
-                    <span style={{ fontWeight: 'bold', color: '#fff' }}>{ratings[trait]}</span>
+                    <span style={{ textTransform: 'capitalize', fontSize: '13px', color: '#a8a8a8', fontWeight: '500' }}>{trait}</span>
+                    <span style={{ fontWeight: 'bold', color: '#fafafa', fontSize: '13px' }}>{ratings[trait]}</span>
                   </div>
-                  <input type="range" name={trait} min="1" max="100" value={ratings[trait]} onChange={(e) => setRatings({ ...ratings, [e.target.name]: Number(e.target.value) })} style={{ width: '100%', cursor: 'pointer', accentColor: '#4facfe' }} />
+                  <input type="range" name={trait} min="1" max="100" value={ratings[trait]} onChange={(e) => setRatings({ ...ratings, [e.target.name]: Number(e.target.value) })} style={{ width: '100%', cursor: 'pointer', accentColor: '#bc1888' }} />
                 </div>
               ))}
             </div>
 
-            {/* RIGHT COLUMN: Spicy Polls & Secret Inbox */}
-            <div style={{ flex: '1 1 350px', backgroundColor: '#151515', padding: '30px', borderRadius: '24px', border: '1px solid #2a2a2a', display: 'flex', flexDirection: 'column', gap: '25px' }}>
-
-              {/* Poll 1 */}
-              <div>
-                <label style={{ fontSize: '14px', color: '#fff', marginBottom: '12px', display: 'block', fontWeight: 'bold' }}>Sabse Bada Red Flag? 🚩</label>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  {['Ghosting', 'Overthinking', 'Gussa', 'Fake Promises'].map(opt => (
-                    <button key={opt} onClick={() => setPolls({ ...polls, redFlag: opt })} style={{ padding: '10px 15px', borderRadius: '12px', border: polls.redFlag === opt ? '1px solid #ff0844' : '1px solid #333', backgroundColor: polls.redFlag === opt ? 'rgba(255,8,68,0.2)' : '#1e1e1e', color: 'white', cursor: 'pointer', fontSize: '13px', transition: '0.3s' }}>{opt}</button>
-                  ))}
-                </div>
+            {/* Wholesome Poll 1 */}
+            <div>
+              <label style={{ fontSize: '13px', color: '#fafafa', marginBottom: '10px', display: 'block', fontWeight: 'bold' }}>Sabse Bada Green Flag? 💚</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {['Good Listener', 'Hype Person', 'Golden Heart', 'Always There'].map(opt => (
+                  <button key={opt} onClick={() => setPolls({ ...polls, redFlag: opt })} style={{ padding: '8px 12px', borderRadius: '20px', border: polls.redFlag === opt ? '1px solid #1ed760' : '1px solid #333', backgroundColor: polls.redFlag === opt ? 'rgba(30, 215, 96, 0.1)' : '#000', color: polls.redFlag === opt ? '#1ed760' : '#a8a8a8', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>{opt}</button>
+                ))}
               </div>
+            </div>
 
-              {/* Poll 2 */}
-              <div>
-                <label style={{ fontSize: '14px', color: '#fff', marginBottom: '12px', display: 'block', fontWeight: 'bold' }}>Party Vibe? 🪩</label>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  {['DJ Breaker', 'Kone mein phone', 'Peeke Ex ko call', 'Free ka khana'].map(opt => (
-                    <button key={opt} onClick={() => setPolls({ ...polls, partyVibe: opt })} style={{ padding: '10px 15px', borderRadius: '12px', border: polls.partyVibe === opt ? '1px solid #4facfe' : '1px solid #333', backgroundColor: polls.partyVibe === opt ? 'rgba(79,172,254,0.2)' : '#1e1e1e', color: 'white', cursor: 'pointer', fontSize: '13px', transition: '0.3s' }}>{opt}</button>
-                  ))}
-                </div>
+            {/* Wholesome Poll 2 */}
+            <div>
+              <label style={{ fontSize: '13px', color: '#fafafa', marginBottom: '10px', display: 'block', fontWeight: 'bold' }}>Best Quality? ✨</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {['Main Character', 'Chill Pill', 'Pure Soul', '3AM Friend'].map(opt => (
+                  <button key={opt} onClick={() => setPolls({ ...polls, partyVibe: opt })} style={{ padding: '8px 12px', borderRadius: '20px', border: polls.partyVibe === opt ? '1px solid #bc1888' : '1px solid #333', backgroundColor: polls.partyVibe === opt ? 'rgba(188, 24, 136, 0.1)' : '#000', color: polls.partyVibe === opt ? '#bc1888' : '#a8a8a8', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>{opt}</button>
+                ))}
               </div>
+            </div>
 
-              {/* Message Box & Submit */}
-              <div style={{ marginTop: 'auto' }}>
-                <textarea placeholder="Spill the tea... Any secrets?" value={userComment} onChange={(e) => setUserComment(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #333', backgroundColor: '#1e1e1e', color: 'white', minHeight: '80px', resize: 'none', marginBottom: '15px' }} />
-                <button onClick={submitVibeCheck} style={{ width: '100%', padding: '15px', background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', color: 'black', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 5px 15px rgba(79,172,254,0.3)' }}>
-                  Send Anonymously 🤫
-                </button>
-              </div>
-
+            {/* Message Box & Submit */}
+            <div style={{ marginTop: '10px' }}>
+              <textarea placeholder="Send a sweet anonymous message..." value={userComment} onChange={(e) => setUserComment(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #333', backgroundColor: '#000', color: '#fafafa', minHeight: '80px', resize: 'none', marginBottom: '15px', fontSize: '14px', fontFamily: 'inherit' }} />
+              <button onClick={submitVibeCheck} style={{ width: '100%', padding: '14px', background: '#fafafa', color: '#000', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>
+                Send Anonymously 💌
+              </button>
             </div>
           </div>
 
-          {/* SECRET INBOX */}
-          <div style={{ backgroundColor: '#151515', padding: '30px', borderRadius: '24px', border: '1px solid #2a2a2a' }}>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '18px', color: '#fff', borderBottom: '1px solid #333', paddingBottom: '10px' }}>Secret Inbox 💌 (Only you can see this)</h3>
+          {/* SECRET INBOX (Instagram DM Style) */}
+          <div style={{ backgroundColor: '#121212', padding: '25px', borderRadius: '16px', border: '1px solid #262626' }}>
+            <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#fafafa', fontWeight: 'bold' }}>Anonymous Messages 🤫</h3>
             {userData.ratings && userData.ratings.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {userData.ratings.map((rating, index) => (
-                  <div key={index} style={{ backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '12px', border: '1px solid #333' }}>
-                    <p style={{ margin: '0', fontSize: '15px', color: '#fff', fontStyle: 'italic' }}>"{rating.comment}"</p>
+                  <div key={index} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
-                    {/* Yahan aapke chune hue Polls Tags ki tarah dikhenge */}
-                    {rating.polls && (rating.polls.redFlag || rating.polls.partyVibe) && (
-                      <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
-                        {rating.polls.redFlag && (
-                          <span style={{ fontSize: '12px', backgroundColor: 'rgba(255,8,68,0.1)', color: '#ff0844', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(255,8,68,0.3)', fontWeight: 'bold' }}>
-                            🚩 {rating.polls.redFlag}
-                          </span>
-                        )}
-                        {rating.polls.partyVibe && (
-                          <span style={{ fontSize: '12px', backgroundColor: 'rgba(79,172,254,0.1)', color: '#4facfe', padding: '6px 12px', borderRadius: '20px', border: '1px solid rgba(79,172,254,0.3)', fontWeight: 'bold' }}>
-                            🪩 {rating.polls.partyVibe}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {/* Anonymous Avatar */}
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#262626', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: '18px' }}>👤</span>
+                    </div>
 
+                    {/* Chat Bubble */}
+                    <div style={{ backgroundColor: '#262626', padding: '12px 16px', borderRadius: '18px', borderTopLeftRadius: '4px', maxWidth: '85%' }}>
+                      <p style={{ margin: '0', fontSize: '14px', color: '#fafafa', lineHeight: '1.4' }}>{rating.comment}</p>
+
+                      {/* Wholesome Tags */}
+                      {rating.polls && (rating.polls.redFlag || rating.polls.partyVibe) && (
+                        <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
+                          {rating.polls.redFlag && (
+                            <span style={{ fontSize: '11px', backgroundColor: '#121212', color: '#1ed760', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                              💚 {rating.polls.redFlag}
+                            </span>
+                          )}
+                          {rating.polls.partyVibe && (
+                            <span style={{ fontSize: '11px', backgroundColor: '#121212', color: '#bc1888', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                              ✨ {rating.polls.partyVibe}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p style={{ color: '#666', fontSize: '14px', textAlign: 'center' }}>No secrets yet. Share your link on Insta!</p>
+              <p style={{ color: '#a8a8a8', fontSize: '14px', textAlign: 'center', margin: '30px 0' }}>Inbox is empty. Share your link to get hyped!</p>
             )}
           </div>
 
         </div>
       ) : (
-        <h2 style={{ color: '#4facfe' }}>Loading Vibe... 🕵️‍♂️</h2>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <div style={{ width: '30px', height: '30px', border: '3px solid #262626', borderTop: '3px solid #fafafa', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        </div>
       )}
     </div>
   );
 }
 
+// ---------------- APP ROUTER ----------------
 function App() {
   return (
     <Router>
