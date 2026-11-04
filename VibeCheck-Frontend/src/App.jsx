@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 
-// ---------------- HOME COMPONENT (SEO Landing Page) ----------------
+// ---------------- HOME COMPONENT (Wholesome & Positive Vibe) ----------------
 function Home() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
@@ -42,10 +42,10 @@ function Home() {
       {/* Hero Section */}
       <div style={{ textAlign: 'center', padding: '80px 20px', maxWidth: '800px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '48px', fontWeight: '900', marginBottom: '20px', lineHeight: '1.2', letterSpacing: '-2px' }}>
-          Find out what your friends <br /><span style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>really think</span> about you.
+          Let your friends <br /><span style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>hype you up</span> anonymously.
         </h1>
         <p style={{ color: '#a8a8a8', fontSize: '18px', marginBottom: '40px', maxWidth: '500px', margin: '0 auto 40px auto' }}>
-          Get anonymous feedback, see your personality stats, and share it directly to your Instagram Story. 100% private.
+          Receive heartwarming compliments, discover your best traits, and spread good vibes on your Instagram story. A 100% safe space. 💛
         </p>
 
         {!showForm ? (
@@ -69,19 +69,19 @@ function Home() {
         )}
       </div>
 
-      {/* SEO Features Section */}
+      {/* SEO Features Section (Wholesome Version) */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', padding: '40px 20px', flexWrap: 'wrap', borderTop: '1px solid #262626', backgroundColor: '#050505' }}>
         <div style={{ textAlign: 'center', maxWidth: '250px' }}>
-          <h3 style={{ fontSize: '20px' }}>🤫 100% Anonymous</h3>
-          <p style={{ color: '#888', fontSize: '14px' }}>They will never know who sent it. Express yourself freely.</p>
+          <h3 style={{ fontSize: '20px' }}>💌 Pure Positivity</h3>
+          <p style={{ color: '#888', fontSize: '14px' }}>Receive heartwarming anonymous messages from people who truly care.</p>
         </div>
         <div style={{ textAlign: 'center', maxWidth: '250px' }}>
-          <h3 style={{ fontSize: '20px' }}>📸 Share on Story</h3>
-          <p style={{ color: '#888', fontSize: '14px' }}>Get a custom link to drop directly on your Instagram story.</p>
+          <h3 style={{ fontSize: '20px' }}>📸 Share the Love</h3>
+          <p style={{ color: '#888', fontSize: '14px' }}>Drop your link on your Instagram story and let the good vibes roll in.</p>
         </div>
         <div style={{ textAlign: 'center', maxWidth: '250px' }}>
-          <h3 style={{ fontSize: '20px' }}>🪩 Vibe Stats</h3>
-          <p style={{ color: '#888', fontSize: '14px' }}>See your personality scores based on what friends think.</p>
+          <h3 style={{ fontSize: '20px' }}>✨ Your Aura Stats</h3>
+          <p style={{ color: '#888', fontSize: '14px' }}>See your unique personality strengths based on how friends appreciate you.</p>
         </div>
       </div>
     </div>
