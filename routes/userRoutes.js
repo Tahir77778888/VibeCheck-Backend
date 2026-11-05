@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Rating = require('../models/Rating');
+const { upload } = require('../config/cloudinary'); // Cloudinary import kar liya
 
 // Route 1: Naya Account Banana (POST /api/users/create)
 router.post('/create', async (req, res) => {
@@ -60,12 +61,37 @@ router.get('/:username', async (req, res) => {
         res.json({
             user: user,
             averageScores: averageScores,
-            ratings: ratings // <-- Secret comments ab yahan se jayenge!
+            ratings: ratings
         });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error in fetching profile", error: error.message });
+    }
+});
+
+// Route 3 (NAYA ROUTE): Profile Photo Upload karne ke liye (POST /api/users/:username/upload)
+router.post('/:username/upload', upload.single('profilePic'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "Photo upload nahi hui bhai!" });
+        }
+
+        // Cloudinary se jo secure link mili (req.file.path), usko database mein save kar do
+        const updatedUser = await User.findOneAndUpdate(
+            { username: req.params.username },
+            { profilePic: req.file.path },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User nahi mila" });
+        }
+
+        res.json({ message: "DP ekdum mast update ho gayi! 🔥", user: updatedUser });
+    } catch (error) {
+        console.error("Upload Error:", error);
+        res.status(500).json({ message: "Server error", error: error.message });
     }
 });
 
