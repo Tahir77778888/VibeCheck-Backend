@@ -71,7 +71,7 @@ function Home() {
   );
 }
 
-// ---------------- PROFILE COMPONENT (Story Card Generator Added) ----------------
+// ---------------- PROFILE COMPONENT ----------------
 function Profile() {
   const { username } = useParams();
   const [userData, setUserData] = useState(null);
@@ -82,7 +82,7 @@ function Profile() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const fileInputRef = useRef(null);
-  const storyCardRef = useRef(null); // Story Card ke liye Ref
+  const storyCardRef = useRef(null);
 
   useEffect(() => {
     fetchProfile();
@@ -122,7 +122,30 @@ function Profile() {
     }
   };
 
-  // NAYA FUNCTION: Image Generate karke Download karwana
+  // DP UPLOAD FUNCTION
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('profilePic', file);
+
+    setIsUploading(true);
+    try {
+      await axios.post(`https://vibecheck-backend-n4yi.onrender.com/api/users/${username}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      alert("DP Update ho gayi! 🔥");
+      fetchProfile(); // Photo update hone ke baad profile refresh
+    } catch (error) {
+      console.error(error);
+      alert("Photo upload fail ho gayi.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // STORY CARD GENERATOR FUNCTION
   const generateAndDownloadStory = async () => {
     if (!storyCardRef.current) return;
     setIsGenerating(true);
@@ -130,8 +153,8 @@ function Profile() {
     try {
       const canvas = await html2canvas(storyCardRef.current, {
         backgroundColor: null,
-        scale: 2, // High Quality ke liye
-        useCORS: true // Image load errors bachane ke liye
+        scale: 2,
+        useCORS: true
       });
 
       const image = canvas.toDataURL("image/png");
@@ -157,7 +180,26 @@ function Profile() {
 
           {/* TOP BANNER */}
           <div style={{ textAlign: 'center', backgroundColor: '#121212', padding: '30px', borderRadius: '16px', border: '1px solid #262626', position: 'relative' }}>
-            <img src={userData.user.profilePic || 'https://via.placeholder.com/150'} alt="Profile" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #bc1888', padding: '3px', marginBottom: '15px' }} />
+
+            {/* CLICKABLE PROFILE PICTURE */}
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <img
+                src={userData.user.profilePic || 'https://via.placeholder.com/150'}
+                alt="Profile"
+                onClick={() => !isUploading && fileInputRef.current.click()}
+                style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #bc1888', padding: '3px', marginBottom: '15px', cursor: 'pointer', opacity: isUploading ? 0.5 : 1 }}
+              />
+              {isUploading && <span style={{ position: 'absolute', top: '40%', left: '15%', color: 'white', fontSize: '12px', fontWeight: 'bold', background: 'rgba(0,0,0,0.6)', padding: '2px 5px', borderRadius: '5px' }}>Uploading...</span>}
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+
             <h2 style={{ margin: '0 0 5px 0', fontSize: '22px', fontWeight: 'bold' }}>{userData.user.name}</h2>
             <p style={{ color: '#a8a8a8', margin: '0 0 15px 0', fontSize: '14px' }}>@{userData.user.username}</p>
 
@@ -187,7 +229,7 @@ function Profile() {
             </div>
           </div>
 
-          {/* HIDDEN STORY CARD TEMPLATE (Screen ke bahar hide kiya hai) */}
+          {/* HIDDEN STORY CARD TEMPLATE */}
           <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
             <div ref={storyCardRef} style={{ width: '400px', height: '711px', background: '#000000', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '30px', color: 'white', textAlign: 'center', borderRadius: '24px', border: '1px solid #333' }}>
               <h3 style={{ color: '#888', fontSize: '16px', marginBottom: '30px', letterSpacing: '2px', textTransform: 'uppercase' }}>VibeCheck</h3>
