@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, useParams, useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 
 // ---------------- HOME COMPONENT (Wholesome & Positive Vibe) ----------------
 function Home() {
@@ -33,13 +34,11 @@ function Home() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fafafa', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
 
-      {/* Navbar */}
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 5%', borderBottom: '1px solid #262626' }}>
         <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', letterSpacing: '-1px' }}>vibecheck.</h2>
         <button onClick={() => setShowForm(true)} style={{ background: 'transparent', color: '#fafafa', border: '1px solid #fafafa', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold' }}>Get Started</button>
       </nav>
 
-      {/* Hero Section */}
       <div style={{ textAlign: 'center', padding: '80px 20px', maxWidth: '800px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '48px', fontWeight: '900', marginBottom: '20px', lineHeight: '1.2', letterSpacing: '-2px' }}>
           Let your friends <br /><span style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>hype you up</span> anonymously.
@@ -68,27 +67,11 @@ function Home() {
           </form>
         )}
       </div>
-
-      {/* SEO Features Section (Wholesome Version) */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', padding: '40px 20px', flexWrap: 'wrap', borderTop: '1px solid #262626', backgroundColor: '#050505' }}>
-        <div style={{ textAlign: 'center', maxWidth: '250px' }}>
-          <h3 style={{ fontSize: '20px' }}>💌 Pure Positivity</h3>
-          <p style={{ color: '#888', fontSize: '14px' }}>Receive heartwarming anonymous messages from people who truly care.</p>
-        </div>
-        <div style={{ textAlign: 'center', maxWidth: '250px' }}>
-          <h3 style={{ fontSize: '20px' }}>📸 Share the Love</h3>
-          <p style={{ color: '#888', fontSize: '14px' }}>Drop your link on your Instagram story and let the good vibes roll in.</p>
-        </div>
-        <div style={{ textAlign: 'center', maxWidth: '250px' }}>
-          <h3 style={{ fontSize: '20px' }}>✨ Your Aura Stats</h3>
-          <p style={{ color: '#888', fontSize: '14px' }}>See your unique personality strengths based on how friends appreciate you.</p>
-        </div>
-      </div>
     </div>
   );
 }
 
-// ---------------- PROFILE COMPONENT (Insta Dark Mode & Wholesome Vibe) ----------------
+// ---------------- PROFILE COMPONENT (Story Card Generator Added) ----------------
 function Profile() {
   const { username } = useParams();
   const [userData, setUserData] = useState(null);
@@ -96,7 +79,10 @@ function Profile() {
   const [polls, setPolls] = useState({ redFlag: '', partyVibe: '' });
   const [userComment, setUserComment] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const fileInputRef = useRef(null);
+  const storyCardRef = useRef(null); // Story Card ke liye Ref
 
   useEffect(() => {
     fetchProfile();
@@ -136,48 +122,95 @@ function Profile() {
     }
   };
 
-  return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fafafa', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '20px 10px' }}>
-      {userData && userData.user ? (
-        <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', margin: '0 auto' }}>
+  // NAYA FUNCTION: Image Generate karke Download karwana
+  const generateAndDownloadStory = async () => {
+    if (!storyCardRef.current) return;
+    setIsGenerating(true);
 
-          {/* TOP BANNER (Insta Profile Style) */}
+    try {
+      const canvas = await html2canvas(storyCardRef.current, {
+        backgroundColor: null,
+        scale: 2, // High Quality ke liye
+        useCORS: true // Image load errors bachane ke liye
+      });
+
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `VibeCheck_${userData.user.username}.png`;
+      link.click();
+
+      alert("Story Card Downloaded! 📸 Ab isko seedha Instagram par post karke apni Link laga do.");
+    } catch (error) {
+      console.error("Error generating story:", error);
+      alert("Oops! Card generate nahi ho paya.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fafafa', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif", display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '20px 10px', overflowX: 'hidden' }}>
+
+      {userData && userData.user ? (
+        <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', margin: '0 auto', position: 'relative' }}>
+
+          {/* TOP BANNER */}
           <div style={{ textAlign: 'center', backgroundColor: '#121212', padding: '30px', borderRadius: '16px', border: '1px solid #262626', position: 'relative' }}>
             <img src={userData.user.profilePic || 'https://via.placeholder.com/150'} alt="Profile" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #bc1888', padding: '3px', marginBottom: '15px' }} />
             <h2 style={{ margin: '0 0 5px 0', fontSize: '22px', fontWeight: 'bold' }}>{userData.user.name}</h2>
             <p style={{ color: '#a8a8a8', margin: '0 0 15px 0', fontSize: '14px' }}>@{userData.user.username}</p>
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ padding: '6px 16px', backgroundColor: '#262626', borderRadius: '8px', color: '#fafafa', fontSize: '13px', fontWeight: '600' }}>
+              <div style={{ padding: '8px 16px', backgroundColor: '#262626', borderRadius: '8px', color: '#fafafa', fontSize: '13px', fontWeight: '600' }}>
+                {getVibeTitle(userData.averageScores)}
+              </div>
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '15px' }}>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert("Link copied! 📋");
+                }}
+                style={{ padding: '10px 16px', background: '#262626', color: 'white', border: '1px solid #333', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>
+                Copy Link 🔗
+              </button>
+
+              <button
+                onClick={generateAndDownloadStory}
+                disabled={isGenerating}
+                style={{ padding: '10px 16px', background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                {isGenerating ? 'Creating... ⏳' : 'Get Story Card 📸'}
+              </button>
+            </div>
+          </div>
+
+          {/* HIDDEN STORY CARD TEMPLATE (Screen ke bahar hide kiya hai) */}
+          <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+            <div ref={storyCardRef} style={{ width: '400px', height: '711px', background: '#000000', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '30px', color: 'white', textAlign: 'center', borderRadius: '24px', border: '1px solid #333' }}>
+              <h3 style={{ color: '#888', fontSize: '16px', marginBottom: '30px', letterSpacing: '2px', textTransform: 'uppercase' }}>VibeCheck</h3>
+              <img src={userData.user.profilePic || 'https://via.placeholder.com/150'} style={{ width: '160px', height: '160px', borderRadius: '50%', border: '4px solid #bc1888', padding: '4px', marginBottom: '20px', objectFit: 'cover' }} />
+              <h1 style={{ fontSize: '32px', margin: '0 0 10px 0', fontWeight: 'bold' }}>{userData.user.name}</h1>
+
+              <div style={{ padding: '8px 20px', backgroundColor: '#1a1a1a', borderRadius: '20px', fontSize: '16px', fontWeight: '600', marginBottom: '40px', color: '#bc1888' }}>
                 {getVibeTitle(userData.averageScores)}
               </div>
 
-              <button
-                onClick={() => {
-                  const url = window.location.href;
-                  if (navigator.share) {
-                    navigator.share({
-                      title: 'Hype me up! ✨',
-                      text: 'Drop a secret compliment or rate my vibe anonymously 💌',
-                      url: url,
-                    }).catch((err) => console.log('Error sharing', err));
-                  } else {
-                    navigator.clipboard.writeText(url);
-                    alert("Link copied! 📋 Paste it on your Instagram story!");
-                  }
-                }}
-                style={{ padding: '6px 16px', background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>
-                Share to Story
-              </button>
+              <h2 style={{ fontSize: '28px', fontWeight: '900', margin: '0 0 30px 0', lineHeight: '1.3' }}>
+                Send me <br /> <span style={{ background: 'linear-gradient(45deg, #f09433, #bc1888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>anonymous</span> messages! 💌
+              </h2>
+
+              <div style={{ padding: '16px 40px', backgroundColor: '#fafafa', color: '#000', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold' }}>
+                Drop link here 🔗
+              </div>
             </div>
           </div>
 
           {/* HYPE FORM SECTION */}
           <div style={{ backgroundColor: '#121212', padding: '25px', borderRadius: '16px', border: '1px solid #262626', display: 'flex', flexDirection: 'column', gap: '25px' }}>
-
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', borderBottom: '1px solid #262626', paddingBottom: '15px' }}>Hype {userData.user.name} Up 👇</h3>
-
-            {/* Sliders */}
             <div>
               {['trust', 'vibe', 'intellect', 'humor'].map((trait) => (
                 <div key={trait} style={{ marginBottom: '20px' }}>
@@ -190,7 +223,6 @@ function Profile() {
               ))}
             </div>
 
-            {/* Wholesome Poll 1 */}
             <div>
               <label style={{ fontSize: '13px', color: '#fafafa', marginBottom: '10px', display: 'block', fontWeight: 'bold' }}>Sabse Bada Green Flag? 💚</label>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -200,7 +232,6 @@ function Profile() {
               </div>
             </div>
 
-            {/* Wholesome Poll 2 */}
             <div>
               <label style={{ fontSize: '13px', color: '#fafafa', marginBottom: '10px', display: 'block', fontWeight: 'bold' }}>Best Quality? ✨</label>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -210,7 +241,6 @@ function Profile() {
               </div>
             </div>
 
-            {/* Message Box & Submit */}
             <div style={{ marginTop: '10px' }}>
               <textarea placeholder="Send a sweet anonymous message..." value={userComment} onChange={(e) => setUserComment(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '1px solid #333', backgroundColor: '#000', color: '#fafafa', minHeight: '80px', resize: 'none', marginBottom: '15px', fontSize: '14px', fontFamily: 'inherit' }} />
               <button onClick={submitVibeCheck} style={{ width: '100%', padding: '14px', background: '#fafafa', color: '#000', border: 'none', borderRadius: '12px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>
@@ -219,36 +249,22 @@ function Profile() {
             </div>
           </div>
 
-          {/* SECRET INBOX (Instagram DM Style) */}
+          {/* SECRET INBOX */}
           <div style={{ backgroundColor: '#121212', padding: '25px', borderRadius: '16px', border: '1px solid #262626' }}>
             <h3 style={{ margin: '0 0 20px 0', fontSize: '16px', color: '#fafafa', fontWeight: 'bold' }}>Anonymous Messages 🤫</h3>
             {userData.ratings && userData.ratings.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {userData.ratings.map((rating, index) => (
                   <div key={index} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-
-                    {/* Anonymous Avatar */}
                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#262626', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
                       <span style={{ fontSize: '18px' }}>👤</span>
                     </div>
-
-                    {/* Chat Bubble */}
                     <div style={{ backgroundColor: '#262626', padding: '12px 16px', borderRadius: '18px', borderTopLeftRadius: '4px', maxWidth: '85%' }}>
                       <p style={{ margin: '0', fontSize: '14px', color: '#fafafa', lineHeight: '1.4' }}>{rating.comment}</p>
-
-                      {/* Wholesome Tags */}
                       {rating.polls && (rating.polls.redFlag || rating.polls.partyVibe) && (
                         <div style={{ display: 'flex', gap: '6px', marginTop: '10px', flexWrap: 'wrap' }}>
-                          {rating.polls.redFlag && (
-                            <span style={{ fontSize: '11px', backgroundColor: '#121212', color: '#1ed760', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                              💚 {rating.polls.redFlag}
-                            </span>
-                          )}
-                          {rating.polls.partyVibe && (
-                            <span style={{ fontSize: '11px', backgroundColor: '#121212', color: '#bc1888', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                              ✨ {rating.polls.partyVibe}
-                            </span>
-                          )}
+                          {rating.polls.redFlag && <span style={{ fontSize: '11px', backgroundColor: '#121212', color: '#1ed760', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>💚 {rating.polls.redFlag}</span>}
+                          {rating.polls.partyVibe && <span style={{ fontSize: '11px', backgroundColor: '#121212', color: '#bc1888', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>✨ {rating.polls.partyVibe}</span>}
                         </div>
                       )}
                     </div>
@@ -271,7 +287,6 @@ function Profile() {
   );
 }
 
-// ---------------- APP ROUTER ----------------
 function App() {
   return (
     <Router>
