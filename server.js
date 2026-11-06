@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+
 // Yeh sabse zaroori line hai jo Express app banati hai
 const app = express();
 
@@ -21,6 +22,9 @@ app.use('/api/users', userRoutes);
 
 const ratingRoutes = require('./routes/ratingRoutes');
 app.use('/api/ratings', ratingRoutes);
+
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
 
 // Test Route
 app.get('/', (req, res) => {

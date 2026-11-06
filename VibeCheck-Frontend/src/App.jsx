@@ -1,71 +1,33 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { BrowserRouter as Router, Routes, Route, useParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 
-// ---------------- HOME COMPONENT (Wholesome & Positive Vibe) ----------------
+// ---------------- HOME COMPONENT (Instagram Login Only) ----------------
 function Home() {
-  const [showForm, setShowForm] = useState(false);
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const handleCreateProfile = async (e) => {
-    e.preventDefault();
-    if (!name || !username) {
-      alert("Fields bharna zaroori hai bhai!");
-      return;
-    }
-    setIsLoading(true);
-    try {
-      await axios.post('https://vibecheck-backend-n4yi.onrender.com/api/users/create', {
-        name: name,
-        username: username.toLowerCase().replace(/\s+/g, '_')
-      });
-      navigate(`/${username.toLowerCase().replace(/\s+/g, '_')}`);
-    } catch (error) {
-      alert(error.response?.data?.message || "Username already taken.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fafafa', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
 
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 5%', borderBottom: '1px solid #262626' }}>
         <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 'bold', letterSpacing: '-1px' }}>vibecheck.</h2>
-        <button onClick={() => setShowForm(true)} style={{ background: 'transparent', color: '#fafafa', border: '1px solid #fafafa', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold' }}>Get Started</button>
       </nav>
 
-      <div style={{ textAlign: 'center', padding: '80px 20px', maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ textAlign: 'center', padding: '100px 20px', maxWidth: '800px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '48px', fontWeight: '900', marginBottom: '20px', lineHeight: '1.2', letterSpacing: '-2px' }}>
           Let your friends <br /><span style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>hype you up</span> anonymously.
         </h1>
-        <p style={{ color: '#a8a8a8', fontSize: '18px', marginBottom: '40px', maxWidth: '500px', margin: '0 auto 40px auto' }}>
+        <p style={{ color: '#a8a8a8', fontSize: '18px', marginBottom: '50px', maxWidth: '500px', margin: '0 auto 50px auto' }}>
           Receive heartwarming compliments, discover your best traits, and spread good vibes on your Instagram story. A 100% safe space. 💛
         </p>
 
-        {!showForm ? (
-          <button onClick={() => setShowForm(true)} style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', border: 'none', padding: '16px 32px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', margin: '0 auto', boxShadow: '0 10px 20px rgba(220, 39, 67, 0.3)' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
-            Continue with Instagram
-          </button>
-        ) : (
-          <form onSubmit={handleCreateProfile} style={{ backgroundColor: '#121212', padding: '30px', borderRadius: '20px', maxWidth: '400px', margin: '0 auto', border: '1px solid #262626', textAlign: 'left' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '20px', textAlign: 'center' }}>Set up your Link</h3>
-            <div style={{ marginBottom: '15px' }}>
-              <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid #333', backgroundColor: '#000', color: '#fafafa' }} />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <input type="text" placeholder="Insta Username" value={username} onChange={(e) => setUsername(e.target.value)} style={{ width: '100%', padding: '14px', borderRadius: '10px', border: '1px solid #333', backgroundColor: '#000', color: '#fafafa' }} />
-            </div>
-            <button type="submit" disabled={isLoading} style={{ width: '100%', padding: '14px', background: '#fafafa', color: '#000', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
-              {isLoading ? 'Loading...' : 'Generate My Link'}
-            </button>
-          </form>
-        )}
+        {/* NAYA INSTAGRAM LOGIN BUTTON */}
+        <button
+          onClick={() => window.location.href = "https://vibecheck-backend-n4yi.onrender.com/api/auth/instagram"}
+          style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', border: 'none', padding: '16px 32px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', margin: '0 auto', boxShadow: '0 10px 20px rgba(220, 39, 67, 0.3)' }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
+          Continue with Instagram
+        </button>
       </div>
     </div>
   );
@@ -136,7 +98,7 @@ function Profile() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert("DP Update ho gayi! 🔥");
-      fetchProfile(); // Photo update hone ke baad profile refresh
+      fetchProfile();
     } catch (error) {
       console.error(error);
       alert("Photo upload fail ho gayi.");
