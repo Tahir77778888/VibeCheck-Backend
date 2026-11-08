@@ -12,7 +12,8 @@ router.get('/instagram', (req, res) => {
     const appId = process.env.INSTAGRAM_APP_ID;
     const redirectUri = 'https://vibecheck-backend-n4yi.onrender.com/api/auth/instagram/callback';
 
-    const url = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=public_profile`;
+    // 🚨 FIX ADDED: Meta ko force karega ki purana session ignore kare aur buffering roke
+    const url = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=public_profile&auth_type=reauthenticate&display=page`;
     res.redirect(url);
 });
 
