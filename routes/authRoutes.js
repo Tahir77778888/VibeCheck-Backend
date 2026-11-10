@@ -4,63 +4,74 @@ const axios = require('axios');
 const User = require('../models/User');
 require('dotenv').config();
 
-// Ek chota sa memory guard banaya hai jo double requests ko block karega
 const usedCodes = new Set();
 
-// 1. Meta (Facebook/Insta) ke login page par bhejne wala route
+// 1. Asli Instagram ke login page par bhejne wala route
 router.get('/instagram', (req, res) => {
     const appId = process.env.INSTAGRAM_APP_ID;
     const redirectUri = 'https://vibecheck-backend-n4yi.onrender.com/api/auth/instagram/callback';
 
-    // 🚨 FIX ADDED: Meta ko force karega ki purana session ignore kare aur buffering roke
-    const url = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&response_type=code&scope=public_profile&auth_type=reauthenticate&display=page`;
+    // 🚨 NAYA INSTAGRAM URL (Ab neeli Facebook screen nahi, Insta khulega)
+    const url = `https://api.instagram.com/oauth/authorize?client_id=${appId}&redirect_uri=${redirectUri}&scope=user_profile,user_media&response_type=code`;
     res.redirect(url);
 });
 
-// 2. Login hone ke baad Meta yahan wapas bhejega
+// 2. Login hone ke baad Instagram yahan wapas bhejega
 router.get('/instagram/callback', async (req, res) => {
-    const { code } = req.query;
+    let { code } = req.query;
     if (!code) return res.status(400).send("Login fail ho gaya bhai.");
 
-    // BUG FIX: Agar yeh code abhi abhi process hua hai, toh dusri duplicate request ko ignore kardo!
+    // BUG FIX: Instagram kabhi-kabhi code ke end mein '#_' laga deta hai, usko hatana zaroori hai
+    if (code.endsWith('#_')) {
+        code = code.replace('#_', '');
+    }
+
+    // Double request blocker
     if (usedCodes.has(code)) {
         console.log("Duplicate request ignored! 🛡️");
         return;
     }
-    usedCodes.add(code); // Code ko used list mein daal do
+    usedCodes.add(code);
 
     try {
-        console.log("Step A: Code se token le rahe hain... ⏳");
-        const tokenResponse = await axios.get(`https://graph.facebook.com/v17.0/oauth/access_token`, {
-            params: {
-                client_id: process.env.INSTAGRAM_APP_ID,
-                client_secret: process.env.INSTAGRAM_APP_SECRET,
-                redirect_uri: 'https://vibecheck-backend-n4yi.onrender.com/api/auth/instagram/callback',
-                code: code
-            }
+        console.log("Step A: Insta Code se token le rahe hain... ⏳");
+
+        // Insta ka rule hai ki token ke liye data URL-encoded format mein POST karna hota hai
+        const params = new URLSearchParams();
+        params.append('client_id', process.env.INSTAGRAM_APP_ID);
+        params.append('client_secret', process.env.INSTAGRAM_APP_SECRET);
+        params.append('grant_type', 'authorization_code');
+        params.append('redirect_uri', 'https://vibecheck-backend-n4yi.onrender.com/api/auth/instagram/callback');
+        params.append('code', code);
+
+        const tokenResponse = await axios.post('https://api.instagram.com/oauth/access_token', params.toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
+
         const accessToken = tokenResponse.data.access_token;
 
         console.log("Step B: Token se user detail le rahe hain... 🔍");
-        const userResponse = await axios.get(`https://graph.facebook.com/me?fields=id,name,picture.type(large)&access_token=${accessToken}`);
-        const { id, name, picture } = userResponse.data;
+        // Insta ke Graph API se user ki details lena
+        const userResponse = await axios.get(`https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`);
+        const { id, username: instaHandle } = userResponse.data;
 
-        // BUG FIX: Agar kisi user ka naam Meta se nahi aata toh code crash na ho
-        const safeName = name || 'Vibe_User';
+        const safeName = instaHandle || 'Vibe_User';
         const username = safeName.toLowerCase().replace(/\s+/g, '_') + '_' + id.substring(0, 4);
 
         console.log("Step C: User DB mein dhoondh/save kar rahe hain... 💾");
         let user = await User.findOne({ username: username });
+
         if (!user) {
             user = new User({
                 name: safeName,
                 username: username,
-                profilePic: picture?.data?.url || '' // Meta se aayi hui photo
+                // Note: Insta API privacy ki wajah se DP nahi deta, isliye ek default avatar laga diya hai taaki frontend na toote
+                profilePic: 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
             });
             await user.save();
-            console.log("✅ Naya user save ho gaya!");
+            console.log("✅ Naya Insta user save ho gaya!");
         } else {
-            console.log("✅ Purana user mil gaya!");
+            console.log("✅ Purana Insta user mil gaya!");
         }
 
         console.log("Step D: Frontend par bhej rahe hain! 🚀");
@@ -69,7 +80,7 @@ router.get('/instagram/callback', async (req, res) => {
     } catch (error) {
         console.error("🔥 ERROR CAUGHT:");
         if (error.response) {
-            console.error("Meta API Error:", error.response.data); // Meta ka error
+            console.error("Insta API Error:", error.response.data); // Insta ka error
         } else {
             console.error("Server/DB Error:", error.message); // Humare DB ka error
         }
