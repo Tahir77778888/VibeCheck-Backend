@@ -3,7 +3,33 @@ import axios from 'axios';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 
-// ---------------- HOME COMPONENT (Instagram Login Only) ----------------
+// 🚨 NAYE GOOGLE IMPORTS
+import { GoogleOAuthProvider, GoogleLogin, useGoogleOneTapLogin } from '@react-oauth/google';
+
+// ---------------- FLOATING ONE-TAP LOGIN COMPONENT ----------------
+const OneTapLogin = () => {
+  useGoogleOneTapLogin({
+    onSuccess: async (credentialResponse) => {
+      console.log("✅ Google Token mil gaya (One-Tap):", credentialResponse);
+      try {
+        const res = await axios.post('https://vibecheck-backend-n4yi.onrender.com/api/auth/google', {
+          token: credentialResponse.credential
+        });
+        if (res.data.success) {
+          window.location.href = `/${res.data.user.username}`;
+        }
+      } catch (error) {
+        console.error("Backend Error:", error);
+      }
+    },
+    onError: () => {
+      console.log('One-Tap Login Failed');
+    },
+  });
+  return null;
+};
+
+// ---------------- HOME COMPONENT (Google Login) ----------------
 function Home() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#000000', color: '#fafafa', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
@@ -17,23 +43,42 @@ function Home() {
           Let your friends <br /><span style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>hype you up</span> anonymously.
         </h1>
         <p style={{ color: '#a8a8a8', fontSize: '18px', marginBottom: '50px', maxWidth: '500px', margin: '0 auto 50px auto' }}>
-          Receive heartwarming compliments, discover your best traits, and spread good vibes on your Instagram story. A 100% safe space. 💛
+          Receive heartwarming compliments, discover your best traits, and spread good vibes on your story. A 100% safe space. 💛
         </p>
 
-        {/* NAYA INSTAGRAM LOGIN BUTTON */}
-        <button
-          onClick={() => window.location.href = "https://vibecheck-backend-n4yi.onrender.com/api/auth/instagram"}
-          style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', color: 'white', border: 'none', padding: '16px 32px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', margin: '0 auto', boxShadow: '0 10px 20px rgba(220, 39, 67, 0.3)' }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>
-          Continue with Instagram
-        </button>
+        {/* 🚀 GOOGLE LOGIN SYSTEM */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <OneTapLogin />
+          <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+              console.log("✅ Google Token mil gaya (Button):", credentialResponse);
+              try {
+                const res = await axios.post('https://vibecheck-backend-n4yi.onrender.com/api/auth/google', {
+                  token: credentialResponse.credential
+                });
+                if (res.data.success) {
+                  window.location.href = `/${res.data.user.username}`;
+                }
+              } catch (error) {
+                console.error("Backend Error:", error);
+                alert("Login failed!");
+              }
+            }}
+            onError={() => {
+              console.log('Button Login Failed');
+            }}
+            useOneTap
+            shape="pill"
+            theme="filled_black"
+          />
+        </div>
+
       </div>
     </div>
   );
 }
 
-// ---------------- PROFILE COMPONENT ----------------
+// ---------------- PROFILE COMPONENT (Same as before) ----------------
 function Profile() {
   const { username } = useParams();
   const [userData, setUserData] = useState(null);
@@ -84,7 +129,6 @@ function Profile() {
     }
   };
 
-  // DP UPLOAD FUNCTION
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -107,7 +151,6 @@ function Profile() {
     }
   };
 
-  // STORY CARD GENERATOR FUNCTION
   const generateAndDownloadStory = async () => {
     if (!storyCardRef.current) return;
     setIsGenerating(true);
@@ -143,7 +186,6 @@ function Profile() {
           {/* TOP BANNER */}
           <div style={{ textAlign: 'center', backgroundColor: '#121212', padding: '30px', borderRadius: '16px', border: '1px solid #262626', position: 'relative' }}>
 
-            {/* CLICKABLE PROFILE PICTURE */}
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <img
                 src={userData.user.profilePic || 'https://via.placeholder.com/150'}
@@ -154,13 +196,7 @@ function Profile() {
               {isUploading && <span style={{ position: 'absolute', top: '40%', left: '15%', color: 'white', fontSize: '12px', fontWeight: 'bold', background: 'rgba(0,0,0,0.6)', padding: '2px 5px', borderRadius: '5px' }}>Uploading...</span>}
             </div>
 
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              accept="image/*"
-              onChange={handleFileChange}
-            />
+            <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileChange} />
 
             <h2 style={{ margin: '0 0 5px 0', fontSize: '22px', fontWeight: 'bold' }}>{userData.user.name}</h2>
             <p style={{ color: '#a8a8a8', margin: '0 0 15px 0', fontSize: '14px' }}>@{userData.user.username}</p>
@@ -171,7 +207,6 @@ function Profile() {
               </div>
             </div>
 
-            {/* ACTION BUTTONS */}
             <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '15px' }}>
               <button
                 onClick={() => {
@@ -197,15 +232,12 @@ function Profile() {
               <h3 style={{ color: '#888', fontSize: '16px', marginBottom: '30px', letterSpacing: '2px', textTransform: 'uppercase' }}>VibeCheck</h3>
               <img src={userData.user.profilePic || 'https://via.placeholder.com/150'} style={{ width: '160px', height: '160px', borderRadius: '50%', border: '4px solid #bc1888', padding: '4px', marginBottom: '20px', objectFit: 'cover' }} />
               <h1 style={{ fontSize: '32px', margin: '0 0 10px 0', fontWeight: 'bold' }}>{userData.user.name}</h1>
-
               <div style={{ padding: '8px 20px', backgroundColor: '#1a1a1a', borderRadius: '20px', fontSize: '16px', fontWeight: '600', marginBottom: '40px', color: '#bc1888' }}>
                 {getVibeTitle(userData.averageScores)}
               </div>
-
               <h2 style={{ fontSize: '28px', fontWeight: '900', margin: '0 0 30px 0', lineHeight: '1.3' }}>
                 Send me <br /> <span style={{ background: 'linear-gradient(45deg, #f09433, #bc1888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>anonymous</span> messages! 💌
               </h2>
-
               <div style={{ padding: '16px 40px', backgroundColor: '#fafafa', color: '#000', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold' }}>
                 Drop link here 🔗
               </div>
@@ -291,14 +323,20 @@ function Profile() {
   );
 }
 
+// ---------------- APP COMPONENT ----------------
 function App() {
+  // 🚨 YAHAN APNI GOOGLE CLIENT ID PASTE KARO
+  const GOOGLE_CLIENT_ID = "YOUR_CLIENT_ID_HERE.apps.googleusercontent.com";
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/:username" element={<Profile />} />
-      </Routes>
-    </Router>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/:username" element={<Profile />} />
+        </Routes>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 

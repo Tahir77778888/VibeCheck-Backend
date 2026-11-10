@@ -1,86 +1,59 @@
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
-const User = require('../models/User');
+const { OAuth2Client } = require('google-auth-library');
+const User = require('../models/User'); // Apne User model ka path check kar lena
 require('dotenv').config();
 
-const usedCodes = new Set();
+// Google Client initialize kar rahe hain
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// 1. Meta (Facebook/Instagram) ke naye login page par bhejne wala route
-router.get('/instagram', (req, res) => {
-    const appId = process.env.INSTAGRAM_APP_ID;
-    const redirectUri = 'https://vibecheck-backend-n4yi.onrender.com/api/auth/instagram/callback';
+// Google Login Route (POST request)
+router.post('/google', async (req, res) => {
+    const { token } = req.body;
 
-    // 🚨 NAYA META URL: Ab hum purane api.instagram.com ki jagah Meta ka naya OAuth use karenge
-    const url = `https://www.facebook.com/v19.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirectUri}&scope=public_profile&response_type=code`;
-    res.redirect(url);
-});
-
-// 2. Login hone ke baad Meta yahan wapas bhejega
-router.get('/instagram/callback', async (req, res) => {
-    let { code } = req.query;
-    if (!code) return res.status(400).send("Login fail ho gaya bhai.");
-
-    // Double request blocker
-    if (usedCodes.has(code)) {
-        console.log("Duplicate request ignored! 🛡️");
-        return;
+    if (!token) {
+        return res.status(400).json({ success: false, error: "Token nahi mila!" });
     }
-    usedCodes.add(code);
 
     try {
-        console.log("Step A: Meta Code se token le rahe hain... ⏳");
-
-        // 🚨 NAYA TOKEN URL: Meta Graph API ka use karke token lena (GET request)
-        const tokenResponse = await axios.get(`https://graph.facebook.com/v19.0/oauth/access_token`, {
-            params: {
-                client_id: process.env.INSTAGRAM_APP_ID,
-                client_secret: process.env.INSTAGRAM_APP_SECRET,
-                redirect_uri: 'https://vibecheck-backend-n4yi.onrender.com/api/auth/instagram/callback',
-                code: code
-            }
+        console.log("Step A: Google Token verify kar rahe hain...");
+        // Token ko Google ke servers par verify karna
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
         });
 
-        const accessToken = tokenResponse.data.access_token;
+        const payload = ticket.getPayload();
+        const { sub, name, email, picture } = payload; // 'sub' = Google ka unique user ID
 
-        console.log("Step B: Token se user detail le rahe hain... 🔍");
+        console.log("Step B: DB mein check kar rahe hain...");
 
-        // 🚨 NAYA USER DATA URL: Asli DP (picture) aur naam nikalna
-        const userResponse = await axios.get(`https://graph.facebook.com/me?fields=id,name,picture.type(large)&access_token=${accessToken}`);
-        const { id, name } = userResponse.data;
-
-        // Asli DP ka link yahan se milega
-        const profilePicUrl = userResponse.data.picture?.data?.url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-
+        // Username create karna (spaces hata kar aur unique ID jod kar)
         const safeName = name || 'Vibe_User';
-        const username = safeName.toLowerCase().replace(/\s+/g, '_') + '_' + id.substring(0, 4);
+        const username = safeName.toLowerCase().replace(/\s+/g, '_') + '_' + sub.substring(0, 4);
 
-        console.log("Step C: User DB mein dhoondh/save kar rahe hain... 💾");
-        let user = await User.findOne({ username: username });
+        // Email se check karenge taaki duplicate accounts na bane
+        let user = await User.findOne({ email: email });
 
         if (!user) {
             user = new User({
                 name: safeName,
                 username: username,
-                profilePic: profilePicUrl // 🎉 Ab default avatar ki jagah asli photo save hogi!
+                email: email,
+                profilePic: picture // 🚀 HD Google Profile pic seedha save hogi
             });
             await user.save();
-            console.log("✅ Naya Meta user save ho gaya!");
+            console.log("✅ Naya Google User create ho gaya!");
         } else {
-            console.log("✅ Purana Meta user mil gaya!");
+            console.log("✅ Purana User wapas aa gaya!");
         }
 
-        console.log("Step D: Frontend par bhej rahe hain! 🚀");
-        res.redirect(`https://check-my-vibes.netlify.app/${username}`);
+        // Frontend ko success aur username bhej do taaki redirect kar sake
+        res.status(200).json({ success: true, user: user });
 
     } catch (error) {
-        console.error("🔥 ERROR CAUGHT:");
-        if (error.response) {
-            console.error("Meta API Error:", error.response.data);
-        } else {
-            console.error("Server/DB Error:", error.message);
-        }
-        res.redirect('https://check-my-vibes.netlify.app/?error=login_failed');
+        console.error("🔥 Google Auth Error:", error.message);
+        res.status(500).json({ success: false, error: "Google login fail ho gaya." });
     }
 });
 
