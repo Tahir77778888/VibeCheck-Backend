@@ -326,7 +326,7 @@ function Profile() {
 // ---------------- APP COMPONENT ----------------
 function App() {
   // 🚨 YAHAN APNI GOOGLE CLIENT ID PASTE KARO
-  const GOOGLE_CLIENT_ID = "YOUR_CLIENT_ID_HERE.apps.googleusercontent.com";
+  const GOOGLE_CLIENT_ID = "647623068223-fk9ujoo3sdgvgihhje6vq8cinq4asmei.apps.googleusercontent.com";
 
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
