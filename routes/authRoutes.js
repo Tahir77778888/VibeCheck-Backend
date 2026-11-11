@@ -28,27 +28,30 @@ router.post('/google', async (req, res) => {
 
         console.log("Step B: DB mein check kar rahe hain...");
 
-        // Username create karna (spaces hata kar aur unique ID jod kar)
+        // Username create karna
         const safeName = name || 'Vibe_User';
         const username = safeName.toLowerCase().replace(/\s+/g, '_') + '_' + sub.substring(0, 4);
 
-        // Email se check karenge taaki duplicate accounts na bane
-        let user = await User.findOne({ email: email });
+        // 🚨 MAIN FIX: Email ki jagah ab hum seedha username se search karenge
+        let user = await User.findOne({ username: username });
 
         if (!user) {
             user = new User({
                 name: safeName,
                 username: username,
                 email: email,
-                profilePic: picture // 🚀 HD Google Profile pic seedha save hogi
+                profilePic: picture
             });
             await user.save();
             console.log("✅ Naya Google User create ho gaya!");
         } else {
+            // Agar pehle se account hai, toh uski profile photo Google wali se update kar do
+            user.profilePic = picture;
+            await user.save();
             console.log("✅ Purana User wapas aa gaya!");
         }
 
-        // Frontend ko success aur username bhej do taaki redirect kar sake
+        // Frontend ko success aur username bhej do
         res.status(200).json({ success: true, user: user });
 
     } catch (error) {
