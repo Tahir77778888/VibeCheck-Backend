@@ -11,6 +11,8 @@ const OneTapLogin = () => {
                     token: credentialResponse.credential
                 });
                 if (res.data.success) {
+                    // 🚀 YAHAN LOCALSTORAGE ADD KIYA HAI (Sahi jagah par)
+                    localStorage.setItem('vibe_username', res.data.user.username);
                     window.location.href = `/${res.data.user.username}`;
                 }
             } catch (error) {
@@ -23,11 +25,6 @@ const OneTapLogin = () => {
     });
     return null;
 };
-// Google login success hone par:
-if (res.data.success) {
-    localStorage.setItem('vibe_username', res.data.user.username); // 👈 YEH LINE ADD KARNI HAI
-    window.location.href = `/${res.data.user.username}`;
-}
 
 function Home() {
     return (
@@ -54,6 +51,8 @@ function Home() {
                                     token: credentialResponse.credential
                                 });
                                 if (res.data.success) {
+                                    // 🚀 YAHAN BHI LOCALSTORAGE ADD KIYA HAI
+                                    localStorage.setItem('vibe_username', res.data.user.username);
                                     window.location.href = `/${res.data.user.username}`;
                                 }
                             } catch (error) {
