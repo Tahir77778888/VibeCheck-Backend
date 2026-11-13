@@ -23,6 +23,20 @@ router.post('/create', async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 });
+// routes/users.js mein kisi bhi API ke neeche yeh add kar do
+router.post('/:username/update-question', async (req, res) => {
+    try {
+        const { question } = req.body;
+        const user = await User.findOne({ username: req.params.username });
+        if (!user) return res.status(404).json({ error: "User nahi mila" });
+
+        user.customQuestion = question;
+        await user.save();
+        res.json({ success: true, customQuestion: user.customQuestion });
+    } catch (error) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
 
 // Route 2: Profile aur saare Secret Comments fetch karna (GET /api/users/:username)
 router.get('/:username', async (req, res) => {
