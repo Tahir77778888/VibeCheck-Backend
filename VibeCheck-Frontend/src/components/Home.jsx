@@ -53,7 +53,7 @@ function Home() {
                                 if (res.data.success) {
                                     // 🚀 YAHAN BHI LOCALSTORAGE ADD KIYA HAI
                                     localStorage.setItem('vibe_username', res.data.user.username);
-                                    window.location.href = `/${res.data.user.username}`;
+                                    window.location.href = `/dashboard`;
                                 }
                             } catch (error) {
                                 console.error("Backend Error:", error);
