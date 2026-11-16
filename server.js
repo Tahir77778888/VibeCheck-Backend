@@ -8,7 +8,14 @@ require('dotenv').config();
 const app = express();
 
 // Middlewares - Yeh dono yahan hone chahiye
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://check-my-vibes.netlify.app",
+        "https://vibe-check-backend-six.vercel.app" // 👈 YEH NAYA LINK ADD KIYA
+    ],
+    credentials: true
+}));
 app.use(express.json()); // Frontend se aane wale JSON data ke liye
 
 // MongoDB Connection
