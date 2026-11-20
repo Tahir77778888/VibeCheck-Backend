@@ -49,14 +49,17 @@ function Profile() {
     }, [username]);
 
     const fetchProfile = () => {
-        axios.get(`https://vibecheck-backend-n4yi.onrender.com/api/users/${username}`)
+        // Nayi line: username se '@' hatao agar kisine daal diya ho
+        const cleanUsername = username.replace('@', '');
+
+        // Yahan ${username} ki jagah ${cleanUsername} bhej do
+        axios.get(`https://vibecheck-backend-n4yi.onrender.com/api/users/${cleanUsername}`)
             .then((response) => {
                 setUserData(response.data);
                 setNewQuestion(response.data.user.customQuestion || "Farewell mein mujhe kya pehenna chahiye?");
             })
             .catch(() => setUserData(null));
     };
-
     const submitVibeCheck = async () => {
         try {
             await axios.post('https://vibecheck-backend-n4yi.onrender.com/api/ratings/submit', {
