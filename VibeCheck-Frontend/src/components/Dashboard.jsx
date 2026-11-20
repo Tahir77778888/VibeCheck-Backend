@@ -148,23 +148,49 @@ function Dashboard() {
                         </p>
                     </div>
 
-                    {/* CARD 2: FUTURE TEST (LOCKED) */}
+                    {/* CARD 2: RED FLAG ANALYZER (ACTIVE) */}
                     <div
-                        className="test-card"
+                        className="test-card active-card"
+                        onClick={() => navigate('/test/red-flag')}
                         style={{
-                            background: 'rgba(255, 255, 255, 0.02)',
+                            background: 'linear-gradient(145deg, rgba(255, 65, 108, 0.12), rgba(0,0,0,0.8))',
                             padding: '30px',
                             borderRadius: '24px',
-                            border: '1px solid rgba(255, 255, 255, 0.05)',
-                            position: 'relative'
+                            border: '1px solid rgba(255, 65, 108, 0.4)',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden'
                         }}
                     >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255, 255, 255, 0.1)', color: '#a8a8a8', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
-                            COMING SOON 🔒
+                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255, 65, 108, 0.2)', color: '#ff6b81', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
+                            LIVE NOW
                         </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#888' }}>Red Flag Analyzer 🚩</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#666', lineHeight: '1.5', maxWidth: '85%' }}>
-                            A brutal honesty test to discover your most toxic traits according to your friends.
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Red Flag Analyzer 🚩</h4>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
+                            A brutal honesty test to discover your most toxic traits according to your vibe.
+                        </p>
+                    </div>
+
+                    {/* CARD 3: AURA READER (ACTIVE) */}
+                    <div
+                        className="test-card active-card"
+                        onClick={() => navigate('/test/aura-reader')}
+                        style={{
+                            background: 'linear-gradient(145deg, rgba(142, 45, 226, 0.12), rgba(0,0,0,0.8))',
+                            padding: '30px',
+                            borderRadius: '24px',
+                            border: '1px solid rgba(142, 45, 226, 0.4)',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(142, 45, 226, 0.2)', color: '#c77dff', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
+                            LIVE NOW
+                        </div>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Aura Reader ✨</h4>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
+                            What color is your energy? Discover your true aura in 4 quick questions.
                         </p>
                     </div>
 

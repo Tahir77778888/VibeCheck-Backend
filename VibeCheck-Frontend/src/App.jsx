@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-
+import VibeTest from './components/VibeTest';
 // Components import kar rahe hain
 import Home from './components/Home';
 import Profile from './components/Profile';
@@ -13,6 +13,8 @@ function App() {
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <Router>
         <Routes>
+          <Route path="/test/:testId" element={<VibeTest />} />
+          <Route path="/:username" element={<Profile />} />
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} /> {/* 👈 NAYA ROUTE YAHAN HAI */}
           <Route path="/:username" element={<Profile />} />
