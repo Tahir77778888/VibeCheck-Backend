@@ -4,7 +4,9 @@ import { useParams } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 
 function Profile() {
-    const { username } = useParams();
+
+    const { username: rawUsername } = useParams();
+    const username = rawUsername ? rawUsername.replace('@', '') : '';
     const [userData, setUserData] = useState(null);
 
     // Naye States
