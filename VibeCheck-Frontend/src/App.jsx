@@ -5,7 +5,6 @@ import VibeTest from './components/VibeTest';
 import Home from './components/Home';
 import Profile from './components/Profile';
 import Dashboard from './components/Dashboard'; // 👈 YEH MISSING THA
-import VibeTest from './components/VibeTest';
 import MbtiTest from './components/MbtiTest';
 
 
