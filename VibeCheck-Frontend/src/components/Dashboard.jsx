@@ -216,6 +216,97 @@ function Dashboard() {
                             What color is your energy? Discover your true aura in 4 quick questions.
                         </p>
                     </div>
+                    {/* CARD 5: VILLAIN ARC (MEN'S CORNER) */}
+                    <div
+                        className="test-card active-card"
+                        onClick={() => navigate('/test/villain-arc')}
+                        style={{
+                            background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(0,0,0,0.85))',
+                            padding: '30px',
+                            borderRadius: '24px',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255, 255, 255, 0.12)', color: '#e4e4e7', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
+                            MEN'S 🐺
+                        </div>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Your Villain Arc 🐺</h4>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
+                            Dark Stoic, Silent Strategist, or Mastermind? Decode your alter ego.
+                        </p>
+                    </div>
+
+                    {/* CARD 6: RIZZ & PRESENCE CHECK (MEN'S CORNER) */}
+                    <div
+                        className="test-card active-card"
+                        onClick={() => navigate('/test/rizz-check')}
+                        style={{
+                            background: 'linear-gradient(145deg, rgba(245, 176, 65, 0.14), rgba(0,0,0,0.85))',
+                            padding: '30px',
+                            borderRadius: '24px',
+                            border: '1px solid rgba(245, 176, 65, 0.4)',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(245, 176, 65, 0.2)', color: '#f8c471', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
+                            MEN'S 🥂
+                        </div>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Rizz & Presence 🥂</h4>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
+                            Old Money Calm or Unspoken Menace? Test your unspoken aura.
+                        </p>
+                    </div>
+
+                    {/* CARD 7: BADDIE TYPE (BADDIES CORNER) */}
+                    <div
+                        className="test-card active-card"
+                        onClick={() => navigate('/test/baddie-type')}
+                        style={{
+                            background: 'linear-gradient(145deg, rgba(255, 65, 108, 0.16), rgba(0,0,0,0.85))',
+                            padding: '30px',
+                            borderRadius: '24px',
+                            border: '1px solid rgba(255, 65, 108, 0.45)',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255, 65, 108, 0.2)', color: '#ff85a2', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
+                            BADDIES 💋
+                        </div>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Baddie Archetype 💋</h4>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
+                            Dark Feminine Siren, Soft Luxury Icon, or CEO Diva? Find your energy.
+                        </p>
+                    </div>
+
+                    {/* CARD 8: STANDARDS VS DELULU (BADDIES CORNER) */}
+                    <div
+                        className="test-card active-card"
+                        onClick={() => navigate('/test/delulu-meter')}
+                        style={{
+                            background: 'linear-gradient(145deg, rgba(188, 24, 136, 0.16), rgba(0,0,0,0.85))',
+                            padding: '30px',
+                            borderRadius: '24px',
+                            border: '1px solid rgba(188, 24, 136, 0.45)',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(188, 24, 136, 0.2)', color: '#ff66c4', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
+                            BADDIES 💅
+                        </div>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Delulu Meter 💅</h4>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
+                            High-Standards Queen or Certified Delulu Diva? Get your brutal percentage.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
