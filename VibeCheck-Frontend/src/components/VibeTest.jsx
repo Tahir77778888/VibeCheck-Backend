@@ -343,6 +343,7 @@ const VibeTest = () => {
     const [totalScore, setTotalScore] = useState(0);
     const [finished, setFinished] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState(test?.defaultTheme || 'noir');
+    const [copiedMsg, setCopiedMsg] = useState(false);
 
     const myUsername = localStorage.getItem('username') || 'vibecheck';
 
@@ -373,6 +374,18 @@ const VibeTest = () => {
 
     const downloadStoryCard = async () => {
         if (!cardRef.current) return;
+
+        // Auto-copy direct link
+        const shareUrl = `${window.location.origin}/test/${testId}`;
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setCopiedMsg(true);
+            setTimeout(() => setCopiedMsg(false), 4000);
+        } catch (err) {
+            console.log('Clipboard copy failed:', err);
+        }
+
+        // Download 9:16 Card
         const canvas = await html2canvas(cardRef.current, {
             backgroundColor: '#050505',
             scale: 3
@@ -537,18 +550,22 @@ const VibeTest = () => {
                             </p>
                         </div>
 
-                        {/* Bottom Handle Stamp */}
-                        <div style={{
-                            borderTop: '1px solid rgba(255,255,255,0.1)',
-                            paddingTop: '16px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            fontSize: '12px',
-                            color: '#a1a1aa'
-                        }}>
-                            <span>@{myUsername}</span>
-                            <span style={{ fontWeight: '700', color: '#fff' }}>Test your vibe →</span>
+                        {/* 🔗 HYBRID STICKER-READY PILL */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                            <div style={{
+                                width: '100%',
+                                padding: '12px 16px',
+                                borderRadius: '14px',
+                                background: 'rgba(255,255,255,0.06)',
+                                border: `1px solid ${activeTheme.border}`,
+                                fontSize: '12px',
+                                fontWeight: '800',
+                                letterSpacing: '0.8px',
+                                color: '#fff'
+                            }}>
+                                🔗 vibecheck • take this test →
+                            </div>
+                            <span style={{ fontSize: '11px', color: '#a1a1aa' }}>@{myUsername}</span>
                         </div>
                     </div>
 
@@ -568,7 +585,7 @@ const VibeTest = () => {
                                 cursor: 'pointer'
                             }}
                         >
-                            Save 9:16 Story Card 📸
+                            {copiedMsg ? 'Saved + Link Copied! Paste on IG 🔗' : 'Save 9:16 Story Card 📸'}
                         </button>
                         <button onClick={resetTest} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', cursor: 'pointer' }}>🔄</button>
                         <button onClick={() => navigate('/dashboard')} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Hub</button>
