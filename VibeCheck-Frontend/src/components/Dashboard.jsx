@@ -148,7 +148,30 @@ function Dashboard() {
                         </p>
                     </div>
 
-                    {/* CARD 2: RED FLAG ANALYZER (ACTIVE) */}
+                    {/* CARD 2: MYERS-BRIGGS MBTI TEST (ACTIVE) */}
+                    <div
+                        className="test-card active-card"
+                        onClick={() => navigate('/test/mbti')}
+                        style={{
+                            background: 'linear-gradient(145deg, rgba(240, 148, 51, 0.14), rgba(0,0,0,0.8))',
+                            padding: '30px',
+                            borderRadius: '24px',
+                            border: '1px solid rgba(240, 148, 51, 0.45)',
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(240, 148, 51, 0.2)', color: '#ffb366', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
+                            NEW 🔥
+                        </div>
+                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>16 Personalities (MBTI) 🧠</h4>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
+                            Decode your mind, find your fictional twin, and get a custom Insta Story card.
+                        </p>
+                    </div>
+
+                    {/* CARD 3: RED FLAG ANALYZER (ACTIVE) */}
                     <div
                         className="test-card active-card"
                         onClick={() => navigate('/test/red-flag')}
@@ -171,7 +194,7 @@ function Dashboard() {
                         </p>
                     </div>
 
-                    {/* CARD 3: AURA READER (ACTIVE) */}
+                    {/* CARD 4: AURA READER (ACTIVE) */}
                     <div
                         className="test-card active-card"
                         onClick={() => navigate('/test/aura-reader')}
@@ -193,27 +216,6 @@ function Dashboard() {
                             What color is your energy? Discover your true aura in 4 quick questions.
                         </p>
                     </div>
-
-                    {/* CARD 3: FUTURE TEST (LOCKED) */}
-                    <div
-                        className="test-card"
-                        style={{
-                            background: 'rgba(255, 255, 255, 0.02)',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(255, 255, 255, 0.05)',
-                            position: 'relative'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255, 255, 255, 0.1)', color: '#a8a8a8', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
-                            COMING SOON 🔒
-                        </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#888' }}>Aura Reader ✨</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#666', lineHeight: '1.5', maxWidth: '85%' }}>
-                            What color is your energy? Let your squad define your spiritual vibe.
-                        </p>
-                    </div>
-
                 </div>
             </div>
         </div>

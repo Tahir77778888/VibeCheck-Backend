@@ -5,6 +5,10 @@ import VibeTest from './components/VibeTest';
 import Home from './components/Home';
 import Profile from './components/Profile';
 import Dashboard from './components/Dashboard'; // 👈 YEH MISSING THA
+import VibeTest from './components/VibeTest';
+import MbtiTest from './components/MbtiTest';
+
+
 
 function App() {
   const GOOGLE_CLIENT_ID = "647623068223-fk9ujoo3sdgvgihhje6vq8cinq4asmei.apps.googleusercontent.com";
@@ -17,6 +21,9 @@ function App() {
           <Route path="/:username" element={<Profile />} />
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} /> {/* 👈 NAYA ROUTE YAHAN HAI */}
+          <Route path="/:username" element={<Profile />} />
+          <Route path="/test/mbti" element={<MbtiTest />} />
+          <Route path="/test/:testId" element={<VibeTest />} />
           <Route path="/:username" element={<Profile />} />
         </Routes>
       </Router>
