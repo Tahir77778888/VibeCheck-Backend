@@ -1,316 +1,497 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function Dashboard() {
-    const [searchQuery, setSearchQuery] = useState('');
+const Dashboard = () => {
     const navigate = useNavigate();
-    const myUsername = localStorage.getItem('vibe_username');
+    const myUsername = localStorage.getItem('username') || 'vibecheck';
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [hoveredIdx, setHoveredIdx] = useState(null);
+    const [enteringTest, setEnteringTest] = useState(null);
+
+    const TESTS = [
+        {
+            id: 'main',
+            short: 'VIBECHECK',
+            emoji: '📈',
+            title: 'Ultimate VibeCheck',
+            tag: 'LIVE NOW',
+            desc: 'Anonymous messages & 10 custom crowd polls.',
+            color: '#bc1888',
+            route: `/${myUsername}`
+        },
+        {
+            id: 'mbti',
+            short: 'MBTI 16',
+            emoji: '🧠',
+            title: '16 Personalities',
+            tag: 'NEW 🔥',
+            desc: 'Decode your mind & find your fictional twin.',
+            color: '#f09433',
+            route: '/test/mbti'
+        },
+        {
+            id: 'villain-arc',
+            short: 'VILLAIN',
+            emoji: '🐺',
+            title: 'Your Villain Arc',
+            tag: "MEN'S",
+            desc: 'Dark Stoic, Strategist, or Mastermind?',
+            color: '#e4e4e7',
+            route: '/test/villain-arc'
+        },
+        {
+            id: 'rizz-check',
+            short: 'RIZZ',
+            emoji: '🥂',
+            title: 'Rizz & Presence',
+            tag: "MEN'S",
+            desc: 'Old Money Calm or Unspoken Menace?',
+            color: '#f5b041',
+            route: '/test/rizz-check'
+        },
+        {
+            id: 'baddie-type',
+            short: 'BADDIE',
+            emoji: '💋',
+            title: 'Baddie Archetype',
+            tag: 'BADDIES',
+            desc: 'Dark Feminine Siren or Soft Luxury Icon?',
+            color: '#ff416c',
+            route: '/test/baddie-type'
+        },
+        {
+            id: 'delulu-meter',
+            short: 'DELULU',
+            emoji: '💅',
+            title: 'Delulu Meter',
+            tag: 'BADDIES',
+            desc: 'High-Standards Queen or Delulu Diva?',
+            color: '#ff66c4',
+            route: '/test/delulu-meter'
+        },
+        {
+            id: 'red-flag',
+            short: 'RED FLAG',
+            emoji: '🚩',
+            title: 'Red Flag Analyzer',
+            tag: 'CLASSIC',
+            desc: 'Discover your most toxic traits.',
+            color: '#ff2e63',
+            route: '/test/red-flag'
+        },
+        {
+            id: 'aura-reader',
+            short: 'AURA',
+            emoji: '✨',
+            title: 'Aura Reader',
+            tag: 'CLASSIC',
+            desc: 'What color is your real energy?',
+            color: '#8e2de2',
+            route: '/test/aura-reader'
+        }
+    ];
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
-            navigate(`/${searchQuery.trim()}`);
+            navigate(`/${searchQuery.trim().toLowerCase()}`);
         }
     };
+
+    // 🌀 Trigger 3D Tunnel Zoom before navigating
+    const handleEnterPortal = (test) => {
+        setEnteringTest(test);
+        setTimeout(() => {
+            navigate(test.route);
+        }, 780);
+    };
+
+    // SVG Polar Math for 8 Slices
+    const polarToCartesian = (cx, cy, r, angleDeg) => {
+        const rad = ((angleDeg - 90) * Math.PI) / 180;
+        return {
+            x: cx + r * Math.cos(rad),
+            y: cy + r * Math.sin(rad)
+        };
+    };
+
+    const createSlicePath = (cx, cy, innerR, outerR, startAngle, endAngle) => {
+        const p1 = polarToCartesian(cx, cy, outerR, endAngle);
+        const p2 = polarToCartesian(cx, cy, outerR, startAngle);
+        const p3 = polarToCartesian(cx, cy, innerR, startAngle);
+        const p4 = polarToCartesian(cx, cy, innerR, endAngle);
+        return `M ${p1.x} ${p1.y} A ${outerR} ${outerR} 0 0 0 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${innerR} ${innerR} 0 0 1 ${p4.x} ${p4.y} Z`;
+    };
+
+    const activeTest = enteringTest || (hoveredIdx !== null ? TESTS[hoveredIdx] : null);
+    const activeColor = activeTest ? activeTest.color : '#bc1888';
+
+    // Center indicator dot angle
+    const dotAngle = hoveredIdx !== null ? hoveredIdx * 45 + 22.5 : 0;
+    const dotPos = polarToCartesian(250, 250, 86, dotAngle);
 
     return (
         <div style={{
             minHeight: '100vh',
-            backgroundColor: '#050505',
-            backgroundImage: 'radial-gradient(circle at 50% -20%, #4a154b 0%, #050505 50%)',
+            backgroundColor: '#040407',
+            backgroundImage: `radial-gradient(circle at 50% 48%, ${activeColor}33 0%, #040407 62%)`,
+            transition: 'background-image 0.5s ease',
             color: '#fff',
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            overflow: 'hidden',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column'
         }}>
-
-            {/* 🎨 INLINE CSS FOR HOVER & ANIMATIONS */}
             <style>{`
-        .search-box:focus-within {
-          box-shadow: 0 0 20px rgba(188, 24, 136, 0.4);
+        @keyframes pulseText {
+          0%, 100% { opacity: 0.45; letter-spacing: 3px; }
+          50% { opacity: 1; letter-spacing: 4.5px; }
+        }
+        @keyframes wheelEnter {
+          0% { transform: scale(1) rotate(0deg); opacity: 1; }
+          100% { transform: scale(4.2) rotate(32deg); opacity: 0; }
+        }
+        @keyframes tunnelRing {
+          0% { transform: translate(-50%, -50%) scale(0.15); opacity: 0; }
+          35% { opacity: 0.9; }
+          100% { transform: translate(-50%, -50%) scale(5.5); opacity: 0; }
+        }
+        @keyframes portalTitle {
+          0% { transform: scale(0.7); opacity: 0; }
+          40% { transform: scale(1.08); opacity: 1; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+        .pulse-hint {
+          animation: pulseText 2.4s ease-in-out infinite;
+        }
+        .wheel-container {
+          transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .wheel-zooming {
+          animation: wheelEnter 0.8s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+        }
+        .slice-group {
+          cursor: pointer;
+          transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), filter 0.28s ease;
+          transform-origin: 250px 250px;
+        }
+        .slice-group:hover {
+          transform: scale(1.045);
+        }
+        .search-pill:focus-within {
           border-color: #bc1888 !important;
-        }
-        .test-card {
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .test-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .active-card:hover {
-          box-shadow: 0 10px 30px rgba(188, 24, 136, 0.2);
-        }
-        .glass-nav {
-          background: rgba(18, 18, 18, 0.6);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          box-shadow: 0 0 22px rgba(188, 24, 136, 0.35);
         }
       `}</style>
 
-            {/* 🛸 STICKY GLASS HEADER */}
-            <div className="glass-nav" style={{ position: 'sticky', top: 0, zIndex: 100, padding: '15px 5%' }}>
-                <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', letterSpacing: '-1px' }}>vibecheck<span style={{ color: '#bc1888' }}>.</span></h2>
+            {/* 🌀 3D PORTAL TUNNEL OVERLAY (Triggers on Click) */}
+            {enteringTest && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 999,
+                    background: 'rgba(4, 4, 7, 0.85)',
+                    backdropFilter: 'blur(8px)',
+                    pointerEvents: 'none',
+                    overflow: 'hidden'
+                }}>
+                    {[0, 0.12, 0.24, 0.36].map((delay, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                width: '260px',
+                                height: '260px',
+                                borderRadius: '50%',
+                                border: `2.5px solid ${enteringTest.color}`,
+                                boxShadow: `0 0 40px ${enteringTest.color}, inset 0 0 30px ${enteringTest.color}55`,
+                                animation: `tunnelRing 0.78s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s forwards`
+                            }}
+                        />
+                    ))}
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        animation: 'portalTitle 0.78s ease forwards'
+                    }}>
+                        <div style={{ fontSize: '46px', marginBottom: '8px' }}>{enteringTest.emoji}</div>
+                        <div style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff', textShadow: `0 0 25px ${enteringTest.color}` }}>
+                            {enteringTest.title}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 🛸 MINIMAL GLASS HEADER */}
+            <div style={{
+                padding: '16px 5%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                zIndex: 20,
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                background: 'rgba(5,5,10,0.55)',
+                backdropFilter: 'blur(12px)'
+            }}>
+                <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', letterSpacing: '-1px' }}>
+                    vibecheck<span style={{ color: activeColor, transition: 'color 0.3s' }}>.</span>
+                </h2>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <form
+                        onSubmit={handleSearch}
+                        className="search-pill"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            borderRadius: '999px',
+                            padding: '4px 6px 4px 14px',
+                            transition: 'all 0.25s ease'
+                        }}
+                    >
+                        <input
+                            type="text"
+                            placeholder="Find @username..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#fff',
+                                fontSize: '13px',
+                                outline: 'none',
+                                width: '120px'
+                            }}
+                        />
+                        <button type="submit" style={{
+                            background: '#fff',
+                            color: '#000',
+                            border: 'none',
+                            borderRadius: '999px',
+                            padding: '6px 12px',
+                            fontSize: '12px',
+                            fontWeight: '800',
+                            cursor: 'pointer'
+                        }}>
+                            Go
+                        </button>
+                    </form>
+
                     <button
                         onClick={() => navigate(`/${myUsername}`)}
                         style={{
-                            padding: '10px 20px',
+                            padding: '9px 16px',
                             background: 'linear-gradient(45deg, #bc1888, #f09433)',
                             color: '#fff',
                             border: 'none',
-                            borderRadius: '20px',
+                            borderRadius: '999px',
                             cursor: 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '14px',
-                            boxShadow: '0 4px 15px rgba(188, 24, 136, 0.3)'
-                        }}>
-                        My Profile 👤
+                            fontWeight: '800',
+                            fontSize: '13px',
+                            boxShadow: '0 4px 18px rgba(188, 24, 136, 0.35)'
+                        }}
+                    >
+                        Profile 👤
                     </button>
                 </div>
             </div>
 
-            <div style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 20px' }}>
-
-                {/* 👋 HERO SECTION */}
-                <div style={{ textAlign: 'center', marginBottom: '50px' }}>
-                    <h1 style={{ fontSize: '36px', fontWeight: '900', marginBottom: '10px', letterSpacing: '-1px' }}>
-                        Welcome to the <span style={{ background: 'linear-gradient(45deg, #f09433, #bc1888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Hub.</span>
-                    </h1>
-                    <p style={{ color: '#a8a8a8', fontSize: '16px' }}>Search friends, check vibes, and explore new personality tests.</p>
+            {/* 🎯 MAIN 360° RADIAL PORTAL STAGE */}
+            <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px 16px 34px 16px',
+                position: 'relative'
+            }}>
+                {/* Top Pulsing Cue */}
+                <div
+                    className="pulse-hint"
+                    style={{
+                        fontSize: '11px',
+                        fontWeight: '800',
+                        color: activeColor,
+                        marginBottom: '14px',
+                        textTransform: 'uppercase',
+                        transition: 'color 0.3s'
+                    }}
+                >
+                    {activeTest ? `TAP TO ENTER • ${activeTest.tag}` : 'HOVER OR TAP A SLICE TO TUNE IN'}
                 </div>
 
-                {/* 🔍 PREMIUM SEARCH BAR */}
-                <div style={{ marginBottom: '50px' }}>
-                    <form onSubmit={handleSearch} className="search-box" style={{
-                        display: 'flex',
-                        background: 'rgba(255, 255, 255, 0.03)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '100px',
-                        padding: '8px',
-                        transition: 'all 0.3s ease'
-                    }}>
-                        <input
-                            type="text"
-                            placeholder="Type a username to hype them up... 🕵️‍♂️"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            style={{
-                                flex: 1,
-                                padding: '15px 20px',
-                                background: 'transparent',
-                                border: 'none',
-                                color: '#fff',
-                                fontSize: '16px',
-                                outline: 'none'
-                            }}
+                {/* 🎡 360° INTERACTIVE WHEEL */}
+                <div
+                    className={`wheel-container ${enteringTest ? 'wheel-zooming' : ''}`}
+                    style={{
+                        width: '100%',
+                        maxWidth: '500px',
+                        aspectRatio: '1 / 1',
+                        position: 'relative',
+                        filter: `drop-shadow(0 0 45px ${activeColor}40)`
+                    }}
+                >
+                    <svg viewBox="0 0 500 500" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                        {/* Outer Orbit Ring */}
+                        <circle
+                            cx="250"
+                            cy="250"
+                            r="242"
+                            fill="none"
+                            stroke={activeColor}
+                            strokeOpacity="0.22"
+                            strokeWidth="1.5"
+                            strokeDasharray="6 8"
                         />
-                        <button type="submit" style={{
-                            padding: '0 30px',
-                            backgroundColor: '#fff',
-                            color: '#000',
-                            border: 'none',
-                            borderRadius: '100px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            fontSize: '15px'
-                        }}>
-                            Search
-                        </button>
-                    </form>
+
+                        {/* 8 Radial Test Slices */}
+                        {TESTS.map((test, idx) => {
+                            const startAngle = idx * 45;
+                            const endAngle = (idx + 1) * 45;
+                            const midAngle = startAngle + 22.5;
+                            const isHovered = hoveredIdx === idx;
+                            const labelPos = polarToCartesian(250, 250, 166, midAngle);
+
+                            return (
+                                <g
+                                    key={test.id}
+                                    className="slice-group"
+                                    onMouseEnter={() => setHoveredIdx(idx)}
+                                    onMouseLeave={() => setHoveredIdx(null)}
+                                    onClick={() => handleEnterPortal(test)}
+                                    style={{
+                                        filter: isHovered ? `drop-shadow(0 0 16px ${test.color}aa)` : 'none'
+                                    }}
+                                >
+                                    <path
+                                        d={createSlicePath(250, 250, 96, 228, startAngle, endAngle)}
+                                        fill={isHovered ? `${test.color}38` : 'rgba(255, 255, 255, 0.035)'}
+                                        stroke={isHovered ? test.color : 'rgba(255, 255, 255, 0.12)'}
+                                        strokeWidth={isHovered ? '2.2' : '1.2'}
+                                        style={{ transition: 'all 0.25s ease' }}
+                                    />
+
+                                    {/* Slice Emoji */}
+                                    <text
+                                        x={labelPos.x}
+                                        y={labelPos.y - 6}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                        style={{ fontSize: isHovered ? '26px' : '22px', pointerEvents: 'none', transition: 'all 0.2s' }}
+                                    >
+                                        {test.emoji}
+                                    </text>
+
+                                    {/* Slice Short Label */}
+                                    <text
+                                        x={labelPos.x}
+                                        y={labelPos.y + 18}
+                                        textAnchor="middle"
+                                        dominantBaseline="middle"
+                                        fill={isHovered ? '#ffffff' : '#a1a1aa'}
+                                        style={{
+                                            fontSize: '10px',
+                                            fontWeight: '800',
+                                            letterSpacing: '1.2px',
+                                            pointerEvents: 'none'
+                                        }}
+                                    >
+                                        {test.short}
+                                    </text>
+                                </g>
+                            );
+                        })}
+
+                        {/* Center Dark Hub */}
+                        <circle
+                            cx="250"
+                            cy="250"
+                            r="90"
+                            fill="#07070c"
+                            stroke={activeColor}
+                            strokeWidth="2"
+                            strokeOpacity="0.65"
+                            style={{ transition: 'stroke 0.3s ease' }}
+                        />
+
+                        {/* Orbiting Active Indicator Dot */}
+                        {hoveredIdx !== null && (
+                            <circle
+                                cx={dotPos.x}
+                                cy={dotPos.y}
+                                r="5.5"
+                                fill={activeColor}
+                                style={{ filter: `drop-shadow(0 0 10px ${activeColor})` }}
+                            />
+                        )}
+
+                        {/* Center Brand / Active Test Title */}
+                        <text
+                            x="250"
+                            y="242"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fill="#fff"
+                            style={{ fontSize: activeTest ? '14px' : '20px', fontWeight: '900', letterSpacing: activeTest ? '0.5px' : '-0.5px' }}
+                        >
+                            {activeTest ? activeTest.title : 'vibecheck.'}
+                        </text>
+                        <text
+                            x="250"
+                            y="265"
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fill={activeColor}
+                            style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '1.5px' }}
+                        >
+                            {activeTest ? 'ENTER PORTAL →' : '8 REALMS'}
+                        </text>
+                    </svg>
                 </div>
 
-                {/* 🃏 CINEMATIC TEST CARDS */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h3 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Trending Tests 🔥</h3>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-
-                    {/* CARD 1: MAIN VIBECHECK (ACTIVE) */}
-                    <div
-                        className="test-card active-card"
-                        onClick={() => navigate(`/${myUsername}`)}
-                        style={{
-                            background: 'linear-gradient(145deg, rgba(188, 24, 136, 0.1), rgba(0,0,0,0.8))',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(188, 24, 136, 0.4)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(188, 24, 136, 0.2)', color: '#ff66c4', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
-                            LIVE NOW
+                {/* 📡 BOTTOM LIVE HUD BAR */}
+                <div style={{
+                    marginTop: '18px',
+                    minHeight: '56px',
+                    maxWidth: '420px',
+                    width: '100%',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${activeTest ? activeColor + '66' : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: '18px',
+                    padding: '12px 18px',
+                    textAlign: 'center',
+                    backdropFilter: 'blur(12px)',
+                    transition: 'all 0.3s ease'
+                }}>
+                    {activeTest ? (
+                        <>
+                            <div style={{ fontSize: '14px', fontWeight: '800', color: '#fff' }}>
+                                {activeTest.emoji} {activeTest.title}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#a1a1aa', marginTop: '3px' }}>
+                                {activeTest.desc}
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ fontSize: '13px', color: '#888', lineHeight: '32px' }}>
+                            Select any portal on the wheel to launch your vibe test ✨
                         </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold' }}>Ultimate VibeCheck 📈</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
-                            Find out what people really think about you. Anonymous messages & 10 custom crowd polls.
-                        </p>
-                    </div>
-
-                    {/* CARD 2: MYERS-BRIGGS MBTI TEST (ACTIVE) */}
-                    <div
-                        className="test-card active-card"
-                        onClick={() => navigate('/test/mbti')}
-                        style={{
-                            background: 'linear-gradient(145deg, rgba(240, 148, 51, 0.14), rgba(0,0,0,0.8))',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(240, 148, 51, 0.45)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(240, 148, 51, 0.2)', color: '#ffb366', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
-                            NEW 🔥
-                        </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>16 Personalities (MBTI) 🧠</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
-                            Decode your mind, find your fictional twin, and get a custom Insta Story card.
-                        </p>
-                    </div>
-
-                    {/* CARD 3: RED FLAG ANALYZER (ACTIVE) */}
-                    <div
-                        className="test-card active-card"
-                        onClick={() => navigate('/test/red-flag')}
-                        style={{
-                            background: 'linear-gradient(145deg, rgba(255, 65, 108, 0.12), rgba(0,0,0,0.8))',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(255, 65, 108, 0.4)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255, 65, 108, 0.2)', color: '#ff6b81', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
-                            LIVE NOW
-                        </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Red Flag Analyzer 🚩</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
-                            A brutal honesty test to discover your most toxic traits according to your vibe.
-                        </p>
-                    </div>
-
-                    {/* CARD 4: AURA READER (ACTIVE) */}
-                    <div
-                        className="test-card active-card"
-                        onClick={() => navigate('/test/aura-reader')}
-                        style={{
-                            background: 'linear-gradient(145deg, rgba(142, 45, 226, 0.12), rgba(0,0,0,0.8))',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(142, 45, 226, 0.4)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(142, 45, 226, 0.2)', color: '#c77dff', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
-                            LIVE NOW
-                        </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Aura Reader ✨</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
-                            What color is your energy? Discover your true aura in 4 quick questions.
-                        </p>
-                    </div>
-                    {/* CARD 5: VILLAIN ARC (MEN'S CORNER) */}
-                    <div
-                        className="test-card active-card"
-                        onClick={() => navigate('/test/villain-arc')}
-                        style={{
-                            background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(0,0,0,0.85))',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255, 255, 255, 0.12)', color: '#e4e4e7', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
-                            MEN'S 🐺
-                        </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Your Villain Arc 🐺</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
-                            Dark Stoic, Silent Strategist, or Mastermind? Decode your alter ego.
-                        </p>
-                    </div>
-
-                    {/* CARD 6: RIZZ & PRESENCE CHECK (MEN'S CORNER) */}
-                    <div
-                        className="test-card active-card"
-                        onClick={() => navigate('/test/rizz-check')}
-                        style={{
-                            background: 'linear-gradient(145deg, rgba(245, 176, 65, 0.14), rgba(0,0,0,0.85))',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(245, 176, 65, 0.4)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(245, 176, 65, 0.2)', color: '#f8c471', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
-                            MEN'S 🥂
-                        </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Rizz & Presence 🥂</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
-                            Old Money Calm or Unspoken Menace? Test your unspoken aura.
-                        </p>
-                    </div>
-
-                    {/* CARD 7: BADDIE TYPE (BADDIES CORNER) */}
-                    <div
-                        className="test-card active-card"
-                        onClick={() => navigate('/test/baddie-type')}
-                        style={{
-                            background: 'linear-gradient(145deg, rgba(255, 65, 108, 0.16), rgba(0,0,0,0.85))',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(255, 65, 108, 0.45)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255, 65, 108, 0.2)', color: '#ff85a2', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
-                            BADDIES 💋
-                        </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Baddie Archetype 💋</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
-                            Dark Feminine Siren, Soft Luxury Icon, or CEO Diva? Find your energy.
-                        </p>
-                    </div>
-
-                    {/* CARD 8: STANDARDS VS DELULU (BADDIES CORNER) */}
-                    <div
-                        className="test-card active-card"
-                        onClick={() => navigate('/test/delulu-meter')}
-                        style={{
-                            background: 'linear-gradient(145deg, rgba(188, 24, 136, 0.16), rgba(0,0,0,0.85))',
-                            padding: '30px',
-                            borderRadius: '24px',
-                            border: '1px solid rgba(188, 24, 136, 0.45)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(188, 24, 136, 0.2)', color: '#ff66c4', padding: '6px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '900', letterSpacing: '1px' }}>
-                            BADDIES 💅
-                        </div>
-                        <h4 style={{ margin: '0 0 10px 0', fontSize: '22px', fontWeight: 'bold', color: '#fff' }}>Delulu Meter 💅</h4>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#a8a8a8', lineHeight: '1.5', maxWidth: '85%' }}>
-                            High-Standards Queen or Certified Delulu Diva? Get your brutal percentage.
-                        </p>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>
     );
-}
+};
 
 export default Dashboard;
