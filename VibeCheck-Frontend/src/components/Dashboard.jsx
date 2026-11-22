@@ -1,5 +1,155 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+/* 🌌 REAL-TIME 3D ARCHITECTURAL CORRIDOR FLY-THROUGH */
+const CorridorTunnel3D = ({ test }) => {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animId;
+
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const startTime = performance.now();
+        const duration = 1200;
+        const numFrames = 26;
+        const spacing = 1.1;
+
+        const render = (now) => {
+            const elapsed = now - startTime;
+            const t = Math.min(elapsed / duration, 1);
+            // Smooth exponential acceleration into the portal
+            const travel = t * t * 18;
+
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+            const fov = Math.min(w, h) * 0.85;
+
+            // Deep dark void
+            ctx.fillStyle = '#050508';
+            ctx.fillRect(0, 0, w, h);
+
+            // Volumetric glow at vanishing point
+            const glow = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.max(w, h) * 0.6);
+            glow.addColorStop(0, `${test.color}88`);
+            glow.addColorStop(0.35, `${test.color}22`);
+            glow.addColorStop(1, 'rgba(5, 5, 8, 0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, w, h);
+
+            // Perspective Floor & Ceiling Rails
+            ctx.strokeStyle = `${test.color}44`;
+            ctx.lineWidth = 1.2;
+            [-2.2, -1.1, 1.1, 2.2].forEach((xOffset) => {
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + xOffset * fov, h);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx + xOffset * fov, 0);
+                ctx.stroke();
+            });
+
+            // Draw 3D Corridor Pillars from far to near
+            for (let i = numFrames; i >= 1; i--) {
+                let z = i * spacing - (travel % spacing);
+                if (z <= 0.15) continue;
+
+                const scale = fov / z;
+                const halfW = 1.75 * scale;
+                const halfH = 1.15 * scale;
+                const pillarW = 0.22 * scale;
+                const alpha = Math.max(0, Math.min(1, 1 - z / (numFrames * spacing)));
+
+                const leftX = cx - halfW;
+                const rightX = cx + halfW;
+                const topY = cy - halfH;
+                const botY = cy + halfH;
+
+                // Architectural Frame Outline
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.16})`;
+                ctx.lineWidth = Math.max(1, scale * 0.015);
+                ctx.strokeRect(leftX, topY, halfW * 2, halfH * 2);
+
+                // Left & Right Dark Pillars
+                ctx.fillStyle = `rgba(14, 14, 22, ${alpha * 0.92})`;
+                ctx.fillRect(leftX - pillarW, topY, pillarW, halfH * 2);
+                ctx.fillRect(rightX, topY, pillarW, halfH * 2);
+
+                // Glowing Neon Edge Strips on Pillars
+                ctx.fillStyle = test.color;
+                ctx.globalAlpha = alpha * 0.85;
+                ctx.fillRect(leftX - 2, topY + halfH * 0.2, Math.max(1.5, scale * 0.018), halfH * 1.6);
+                ctx.fillRect(rightX, topY + halfH * 0.2, Math.max(1.5, scale * 0.018), halfH * 1.6);
+                ctx.globalAlpha = 1;
+            }
+
+            // Floating Glass Showcase Card rushing toward camera
+            const cardScale = 0.25 + Math.pow(t, 2.2) * 1.35;
+            const cardW = Math.min(w * 0.72, 460) * cardScale;
+            const cardH = cardW * 0.56;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.shadowColor = test.color;
+            ctx.shadowBlur = 40;
+            ctx.fillStyle = 'rgba(12, 12, 18, 0.88)';
+            ctx.strokeStyle = test.color;
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 18 * cardScale);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `900 ${Math.round(28 * cardScale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+            ctx.fillText(`${test.emoji}  ${test.title.toUpperCase()}`, 0, -10 * cardScale);
+
+            ctx.fillStyle = test.color;
+            ctx.font = `700 ${Math.round(12 * cardScale)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+            ctx.fillText('ENTERING REALM...', 0, 24 * cardScale);
+            ctx.restore();
+
+            if (t < 1) {
+                animId = requestAnimationFrame(render);
+            }
+        };
+
+        animId = requestAnimationFrame(render);
+        return () => {
+            cancelAnimationFrame(animId);
+            window.removeEventListener('resize', resize);
+        };
+    }, [test]);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 999,
+                display: 'block'
+            }}
+        />
+    );
+};
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -7,6 +157,7 @@ const Dashboard = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [hoveredIdx, setHoveredIdx] = useState(null);
+    const [cursorAngle, setCursorAngle] = useState(0);
     const [enteringTest, setEnteringTest] = useState(null);
 
     const TESTS = [
@@ -15,9 +166,11 @@ const Dashboard = () => {
             short: 'VIBECHECK',
             emoji: '📈',
             title: 'Ultimate VibeCheck',
-            tag: 'LIVE NOW',
-            desc: 'Anonymous messages & 10 custom crowd polls.',
-            color: '#bc1888',
+            tag: 'LIVE HUB',
+            desc: 'Anonymous inbox & 10 custom crowd polls.',
+            color: '#ff2e93',
+            bg: 'radial-gradient(circle at 50% 20%, #7a0944 0%, #1a0614 55%, #07050a 100%)',
+            pattern: 'repeating-linear-gradient(45deg, rgba(255,46,147,0.08) 0px, rgba(255,46,147,0.08) 1px, transparent 1px, transparent 22px)',
             route: `/${myUsername}`
         },
         {
@@ -26,8 +179,10 @@ const Dashboard = () => {
             emoji: '🧠',
             title: '16 Personalities',
             tag: 'NEW 🔥',
-            desc: 'Decode your mind & find your fictional twin.',
-            color: '#f09433',
+            desc: 'Decode your mind & fictional twin.',
+            color: '#ff9a3c',
+            bg: 'radial-gradient(circle at 80% 25%, #8a3c00 0%, #241005 55%, #07050a 100%)',
+            pattern: 'radial-gradient(rgba(255,154,60,0.16) 1px, transparent 1px)',
             route: '/test/mbti'
         },
         {
@@ -35,9 +190,11 @@ const Dashboard = () => {
             short: 'VILLAIN',
             emoji: '🐺',
             title: 'Your Villain Arc',
-            tag: "MEN'S",
+            tag: "MEN'S CORNER",
             desc: 'Dark Stoic, Strategist, or Mastermind?',
             color: '#e4e4e7',
+            bg: 'radial-gradient(circle at 85% 50%, #3f3f46 0%, #141418 55%, #050507 100%)',
+            pattern: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 28px)',
             route: '/test/villain-arc'
         },
         {
@@ -45,9 +202,11 @@ const Dashboard = () => {
             short: 'RIZZ',
             emoji: '🥂',
             title: 'Rizz & Presence',
-            tag: "MEN'S",
+            tag: "MEN'S CORNER",
             desc: 'Old Money Calm or Unspoken Menace?',
             color: '#f5b041',
+            bg: 'radial-gradient(circle at 75% 80%, #6e480a 0%, #1f1505 55%, #07050a 100%)',
+            pattern: 'repeating-linear-gradient(-45deg, rgba(245,176,65,0.09) 0px, rgba(245,176,65,0.09) 1px, transparent 1px, transparent 20px)',
             route: '/test/rizz-check'
         },
         {
@@ -57,7 +216,9 @@ const Dashboard = () => {
             title: 'Baddie Archetype',
             tag: 'BADDIES',
             desc: 'Dark Feminine Siren or Soft Luxury Icon?',
-            color: '#ff416c',
+            color: '#ff3b6b',
+            bg: 'radial-gradient(circle at 50% 85%, #820c2c 0%, #240510 55%, #07050a 100%)',
+            pattern: 'radial-gradient(rgba(255,59,107,0.18) 1.2px, transparent 1.2px)',
             route: '/test/baddie-type'
         },
         {
@@ -67,7 +228,9 @@ const Dashboard = () => {
             title: 'Delulu Meter',
             tag: 'BADDIES',
             desc: 'High-Standards Queen or Delulu Diva?',
-            color: '#ff66c4',
+            color: '#d946ef',
+            bg: 'radial-gradient(circle at 20% 80%, #6b117a 0%, #1f0626 55%, #07050a 100%)',
+            pattern: 'repeating-linear-gradient(45deg, rgba(217,70,239,0.09) 0px, rgba(217,70,239,0.09) 1px, transparent 1px, transparent 24px)',
             route: '/test/delulu-meter'
         },
         {
@@ -76,8 +239,10 @@ const Dashboard = () => {
             emoji: '🚩',
             title: 'Red Flag Analyzer',
             tag: 'CLASSIC',
-            desc: 'Discover your most toxic traits.',
-            color: '#ff2e63',
+            desc: 'Brutal honesty check on your toxic traits.',
+            color: '#ff2e4c',
+            bg: 'radial-gradient(circle at 15% 50%, #7f0a1d 0%, #210509 55%, #07050a 100%)',
+            pattern: 'repeating-linear-gradient(0deg, rgba(255,46,76,0.08) 0px, rgba(255,46,76,0.08) 1px, transparent 1px, transparent 26px)',
             route: '/test/red-flag'
         },
         {
@@ -86,11 +251,21 @@ const Dashboard = () => {
             emoji: '✨',
             title: 'Aura Reader',
             tag: 'CLASSIC',
-            desc: 'What color is your real energy?',
-            color: '#8e2de2',
+            desc: 'Discover the true color of your energy.',
+            color: '#7c3aed',
+            bg: 'radial-gradient(circle at 20% 20%, #4c1d95 0%, #15082e 55%, #07050a 100%)',
+            pattern: 'radial-gradient(rgba(124,58,237,0.2) 1.2px, transparent 1.2px)',
             route: '/test/aura-reader'
         }
     ];
+
+    // Track cursor angle around screen center for the orbiting dial dot
+    const handleMouseMove = (e) => {
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        const angle = (Math.atan2(e.clientY - cy, e.clientX - cx) * 180) / Math.PI + 90;
+        setCursorAngle(angle);
+    };
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -99,164 +274,328 @@ const Dashboard = () => {
         }
     };
 
-    // 🌀 Trigger 3D Tunnel Zoom before navigating
     const handleEnterPortal = (test) => {
         setEnteringTest(test);
         setTimeout(() => {
             navigate(test.route);
-        }, 780);
+        }, 1180);
     };
 
-    // SVG Polar Math for 8 Slices
-    const polarToCartesian = (cx, cy, r, angleDeg) => {
-        const rad = ((angleDeg - 90) * Math.PI) / 180;
-        return {
-            x: cx + r * Math.cos(rad),
-            y: cy + r * Math.sin(rad)
+    // Full-bleed edge-to-edge clip-path polygon for each 45° slice
+    const getSliceClipPath = (idx) => {
+        const startDeg = idx * 45 - 22.5;
+        const midDeg = idx * 45;
+        const endDeg = idx * 45 + 22.5;
+        const R = 160;
+        const pt = (deg) => {
+            const rad = (deg * Math.PI) / 180;
+            const x = 50 + R * Math.sin(rad);
+            const y = 50 - R * Math.cos(rad);
+            return `${x.toFixed(2)}% ${y.toFixed(2)}%`;
         };
-    };
-
-    const createSlicePath = (cx, cy, innerR, outerR, startAngle, endAngle) => {
-        const p1 = polarToCartesian(cx, cy, outerR, endAngle);
-        const p2 = polarToCartesian(cx, cy, outerR, startAngle);
-        const p3 = polarToCartesian(cx, cy, innerR, startAngle);
-        const p4 = polarToCartesian(cx, cy, innerR, endAngle);
-        return `M ${p1.x} ${p1.y} A ${outerR} ${outerR} 0 0 0 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${innerR} ${innerR} 0 0 1 ${p4.x} ${p4.y} Z`;
+        return `polygon(50% 50%, ${pt(startDeg)}, ${pt(midDeg)}, ${pt(endDeg)})`;
     };
 
     const activeTest = enteringTest || (hoveredIdx !== null ? TESTS[hoveredIdx] : null);
-    const activeColor = activeTest ? activeTest.color : '#bc1888';
-
-    // Center indicator dot angle
-    const dotAngle = hoveredIdx !== null ? hoveredIdx * 45 + 22.5 : 0;
-    const dotPos = polarToCartesian(250, 250, 86, dotAngle);
+    const activeColor = activeTest ? activeTest.color : '#ff7b29';
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            backgroundColor: '#040407',
-            backgroundImage: `radial-gradient(circle at 50% 48%, ${activeColor}33 0%, #040407 62%)`,
-            transition: 'background-image 0.5s ease',
-            color: '#fff',
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            overflow: 'hidden',
-            position: 'relative',
-            display: 'flex',
-            flexDirection: 'column'
-        }}>
+        <div
+            onMouseMove={handleMouseMove}
+            style={{
+                position: 'fixed',
+                inset: 0,
+                backgroundColor: '#050508',
+                color: '#fff',
+                fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                overflow: 'hidden',
+                userSelect: 'none'
+            }}
+        >
             <style>{`
-        @keyframes pulseText {
-          0%, 100% { opacity: 0.45; letter-spacing: 3px; }
-          50% { opacity: 1; letter-spacing: 4.5px; }
+        @keyframes pulseCue {
+          0%, 100% { opacity: 0.45; }
+          50% { opacity: 1; }
         }
-        @keyframes wheelEnter {
-          0% { transform: scale(1) rotate(0deg); opacity: 1; }
-          100% { transform: scale(4.2) rotate(32deg); opacity: 0; }
+        .cue-blink {
+          animation: pulseCue 2.2s ease-in-out infinite;
         }
-        @keyframes tunnelRing {
-          0% { transform: translate(-50%, -50%) scale(0.15); opacity: 0; }
-          35% { opacity: 0.9; }
-          100% { transform: translate(-50%, -50%) scale(5.5); opacity: 0; }
-        }
-        @keyframes portalTitle {
-          0% { transform: scale(0.7); opacity: 0; }
-          40% { transform: scale(1.08); opacity: 1; }
-          100% { transform: scale(1.8); opacity: 0; }
-        }
-        .pulse-hint {
-          animation: pulseText 2.4s ease-in-out infinite;
-        }
-        .wheel-container {
-          transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .wheel-zooming {
-          animation: wheelEnter 0.8s cubic-bezier(0.7, 0, 0.3, 1) forwards;
-        }
-        .slice-group {
+        .slice-layer {
+          position: absolute;
+          inset: 0;
           cursor: pointer;
-          transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), filter 0.28s ease;
-          transform-origin: 250px 250px;
+          transition: filter 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .slice-group:hover {
-          transform: scale(1.045);
+        .slice-bg-content {
+          position: absolute;
+          inset: 0;
+          transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
         }
-        .search-pill:focus-within {
-          border-color: #bc1888 !important;
-          box-shadow: 0 0 22px rgba(188, 24, 136, 0.35);
+        .slice-layer:hover .slice-bg-content {
+          transform: scale(1.06);
         }
       `}</style>
 
-            {/* 🌀 3D PORTAL TUNNEL OVERLAY (Triggers on Click) */}
-            {enteringTest && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    zIndex: 999,
-                    background: 'rgba(4, 4, 7, 0.85)',
-                    backdropFilter: 'blur(8px)',
-                    pointerEvents: 'none',
-                    overflow: 'hidden'
-                }}>
-                    {[0, 0.12, 0.24, 0.36].map((delay, i) => (
+            {/* 🌀 REAL 3D CORRIDOR FLY-THROUGH OVERLAY */}
+            {enteringTest && <CorridorTunnel3D test={enteringTest} />}
+
+            {/* 🌈 8 FULL-SCREEN BLEED RADIAL SLICES */}
+            {TESTS.map((test, idx) => {
+                const isHovered = hoveredIdx === idx;
+                const anyHovered = hoveredIdx !== null;
+                const midRad = ((idx * 45) * Math.PI) / 180;
+                // Position floating slice artwork & giant watermark along each ray
+                const artX = 50 + 34 * Math.sin(midRad);
+                const artY = 50 - 34 * Math.cos(midRad);
+
+                return (
+                    <div
+                        key={test.id}
+                        className="slice-layer"
+                        onMouseEnter={() => setHoveredIdx(idx)}
+                        onMouseLeave={() => setHoveredIdx(null)}
+                        onClick={() => handleEnterPortal(test)}
+                        style={{
+                            clipPath: getSliceClipPath(idx),
+                            WebkitClipPath: getSliceClipPath(idx),
+                            filter: isHovered
+                                ? 'brightness(1.25) saturate(1.3)'
+                                : anyHovered
+                                    ? 'brightness(0.32) saturate(0.35)'
+                                    : 'brightness(0.62) saturate(0.75)',
+                            zIndex: isHovered ? 4 : 1
+                        }}
+                    >
                         <div
-                            key={i}
+                            className="slice-bg-content"
                             style={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                width: '260px',
-                                height: '260px',
-                                borderRadius: '50%',
-                                border: `2.5px solid ${enteringTest.color}`,
-                                boxShadow: `0 0 40px ${enteringTest.color}, inset 0 0 30px ${enteringTest.color}55`,
-                                animation: `tunnelRing 0.78s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s forwards`
+                                background: test.bg,
+                                backgroundSize: 'cover'
                             }}
-                        />
-                    ))}
-                    <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        animation: 'portalTitle 0.78s ease forwards'
-                    }}>
-                        <div style={{ fontSize: '46px', marginBottom: '8px' }}>{enteringTest.emoji}</div>
-                        <div style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '2px', textTransform: 'uppercase', color: '#fff', textShadow: `0 0 25px ${enteringTest.color}` }}>
-                            {enteringTest.title}
+                        >
+                            {/* Subtle Textured Grid / Dots */}
+                            <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                backgroundImage: test.pattern,
+                                backgroundSize: test.pattern.includes('radial') ? '22px 22px' : 'auto',
+                                opacity: isHovered ? 0.9 : 0.45
+                            }} />
+
+                            {/* Floating Cinematic Visual Anchor inside the slice */}
+                            <div style={{
+                                position: 'absolute',
+                                left: `${artX}%`,
+                                top: `${artY}%`,
+                                transform: `translate(-50%, -50%) scale(${isHovered ? 1.15 : 0.95})`,
+                                transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+                                textAlign: 'center',
+                                pointerEvents: 'none'
+                            }}>
+                                <div style={{
+                                    fontSize: 'clamp(42px, 6vw, 76px)',
+                                    filter: `drop-shadow(0 0 30px ${test.color})`,
+                                    opacity: isHovered ? 1 : 0.65
+                                }}>
+                                    {test.emoji}
+                                </div>
+                                <div style={{
+                                    marginTop: '6px',
+                                    fontSize: 'clamp(11px, 1.2vw, 15px)',
+                                    fontWeight: '900',
+                                    letterSpacing: '3px',
+                                    color: '#fff',
+                                    textShadow: `0 0 18px ${test.color}`,
+                                    opacity: isHovered ? 1 : 0.5
+                                }}>
+                                    {test.title.toUpperCase()}
+                                </div>
+                                <div style={{
+                                    marginTop: '4px',
+                                    fontSize: '11px',
+                                    color: 'rgba(255,255,255,0.75)',
+                                    maxWidth: '180px',
+                                    opacity: isHovered ? 1 : 0,
+                                    transition: 'opacity 0.3s ease'
+                                }}>
+                                    {test.desc}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })}
 
-            {/* 🛸 MINIMAL GLASS HEADER */}
+            {/* 📏 RAZOR-THIN RADIAL DIVIDER RAYS SHOOTING TO SCREEN EDGES */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 6 }}>
+                {TESTS.map((_, idx) => (
+                    <div
+                        key={idx}
+                        style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            width: '150vmax',
+                            height: '1px',
+                            background: 'linear-gradient(90deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 60%, transparent 100%)',
+                            transformOrigin: '0 0',
+                            transform: `rotate(${idx * 45 - 112.5}deg)`
+                        }}
+                    />
+                ))}
+            </div>
+
+            {/* 🎯 PRECISION CENTER DIAL (Matches Video's Center Hub) */}
             <div style={{
-                padding: '16px 5%',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 'clamp(230px, 31vw, 330px)',
+                height: 'clamp(230px, 31vw, 330px)',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, #0e0e14 0%, #050508 75%)',
+                boxShadow: `0 0 80px rgba(0,0,0,0.95), 0 0 40px ${activeColor}33`,
+                zIndex: 10,
+                pointerEvents: 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                {/* Dotted Inner Ring */}
+                <div style={{
+                    position: 'absolute',
+                    inset: '-8px',
+                    borderRadius: '50%',
+                    border: `1.5px dashed ${activeColor}88`,
+                    transition: 'border-color 0.3s ease'
+                }} />
+
+                {/* Real-Time Orbiting Indicator Dot */}
+                <div style={{
+                    position: 'absolute',
+                    inset: '14px',
+                    transform: `rotate(${cursorAngle}deg)`,
+                    transition: 'transform 0.08s linear'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        background: activeColor,
+                        boxShadow: `0 0 14px ${activeColor}, 0 0 28px ${activeColor}`
+                    }} />
+                </div>
+
+                {/* Perimeter Rim Labels */}
+                {TESTS.map((test, idx) => {
+                    const deg = idx * 45;
+                    const isHovered = hoveredIdx === idx;
+                    return (
+                        <div
+                            key={test.id}
+                            style={{
+                                position: 'absolute',
+                                inset: '-30px',
+                                transform: `rotate(${deg}deg)`,
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'flex-start'
+                            }}
+                        >
+                            <span style={{
+                                fontSize: 'clamp(8px, 0.85vw, 10px)',
+                                fontWeight: '800',
+                                letterSpacing: '2px',
+                                color: isHovered ? '#ffffff' : 'rgba(255,255,255,0.52)',
+                                textShadow: isHovered ? `0 0 12px ${test.color}` : 'none',
+                                transition: 'all 0.25s ease'
+                            }}>
+                                {test.short}
+                            </span>
+                        </div>
+                    );
+                })}
+
+                {/* Center Typography */}
+                <div
+                    className="cue-blink"
+                    style={{
+                        fontSize: '10px',
+                        fontWeight: '800',
+                        letterSpacing: '2.2px',
+                        color: activeColor,
+                        marginBottom: '10px',
+                        textTransform: 'uppercase'
+                    }}
+                >
+                    {activeTest ? 'CLICK TO TUNE IN' : 'HOVER TO TUNE IN'}
+                </div>
+
+                <div style={{
+                    fontSize: 'clamp(22px, 2.6vw, 32px)',
+                    fontWeight: '900',
+                    letterSpacing: '-0.8px',
+                    color: '#fff',
+                    textAlign: 'center',
+                    padding: '0 20px',
+                    lineHeight: '1.1'
+                }}>
+                    {activeTest ? activeTest.title : (
+                        <>vibecheck<span style={{ color: activeColor }}>.</span></>
+                    )}
+                </div>
+
+                <div style={{
+                    marginTop: '10px',
+                    fontSize: '11px',
+                    color: 'rgba(255,255,255,0.45)',
+                    letterSpacing: '1.5px',
+                    fontWeight: '700'
+                }}>
+                    {activeTest ? activeTest.tag : '8 INTERACTIVE REALMS'}
+                </div>
+            </div>
+
+            {/* 🛸 MINIMAL FLOATING TOP BAR (Search + Profile) */}
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                padding: '18px 28px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                zIndex: 20,
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                background: 'rgba(5,5,10,0.55)',
-                backdropFilter: 'blur(12px)'
+                zIndex: 25,
+                pointerEvents: 'none'
             }}>
-                <h2 style={{ margin: 0, fontSize: '22px', fontWeight: '900', letterSpacing: '-1px' }}>
-                    vibecheck<span style={{ color: activeColor, transition: 'color 0.3s' }}>.</span>
-                </h2>
+                <div style={{
+                    pointerEvents: 'auto',
+                    fontSize: '18px',
+                    fontWeight: '900',
+                    letterSpacing: '-0.5px',
+                    color: 'rgba(255,255,255,0.9)'
+                }}>
+                    vibecheck<span style={{ color: activeColor }}>.</span>
+                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto' }}>
                     <form
                         onSubmit={handleSearch}
-                        className="search-pill"
                         style={{
                             display: 'flex',
                             alignItems: 'center',
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.12)',
+                            background: 'rgba(10, 10, 16, 0.65)',
+                            backdropFilter: 'blur(12px)',
+                            border: '1px solid rgba(255,255,255,0.14)',
                             borderRadius: '999px',
-                            padding: '4px 6px 4px 14px',
-                            transition: 'all 0.25s ease'
+                            padding: '4px 6px 4px 14px'
                         }}
                     >
                         <input
@@ -268,7 +607,7 @@ const Dashboard = () => {
                                 background: 'transparent',
                                 border: 'none',
                                 color: '#fff',
-                                fontSize: '13px',
+                                fontSize: '12px',
                                 outline: 'none',
                                 width: '120px'
                             }}
@@ -278,8 +617,8 @@ const Dashboard = () => {
                             color: '#000',
                             border: 'none',
                             borderRadius: '999px',
-                            padding: '6px 12px',
-                            fontSize: '12px',
+                            padding: '5px 11px',
+                            fontSize: '11px',
                             fontWeight: '800',
                             cursor: 'pointer'
                         }}>
@@ -290,204 +629,19 @@ const Dashboard = () => {
                     <button
                         onClick={() => navigate(`/${myUsername}`)}
                         style={{
-                            padding: '9px 16px',
-                            background: 'linear-gradient(45deg, #bc1888, #f09433)',
+                            padding: '8px 16px',
+                            background: 'rgba(10, 10, 16, 0.72)',
+                            backdropFilter: 'blur(12px)',
+                            border: `1px solid ${activeColor}88`,
                             color: '#fff',
-                            border: 'none',
                             borderRadius: '999px',
                             cursor: 'pointer',
                             fontWeight: '800',
-                            fontSize: '13px',
-                            boxShadow: '0 4px 18px rgba(188, 24, 136, 0.35)'
+                            fontSize: '12px'
                         }}
                     >
-                        Profile 👤
+                        @{myUsername}
                     </button>
-                </div>
-            </div>
-
-            {/* 🎯 MAIN 360° RADIAL PORTAL STAGE */}
-            <div style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '20px 16px 34px 16px',
-                position: 'relative'
-            }}>
-                {/* Top Pulsing Cue */}
-                <div
-                    className="pulse-hint"
-                    style={{
-                        fontSize: '11px',
-                        fontWeight: '800',
-                        color: activeColor,
-                        marginBottom: '14px',
-                        textTransform: 'uppercase',
-                        transition: 'color 0.3s'
-                    }}
-                >
-                    {activeTest ? `TAP TO ENTER • ${activeTest.tag}` : 'HOVER OR TAP A SLICE TO TUNE IN'}
-                </div>
-
-                {/* 🎡 360° INTERACTIVE WHEEL */}
-                <div
-                    className={`wheel-container ${enteringTest ? 'wheel-zooming' : ''}`}
-                    style={{
-                        width: '100%',
-                        maxWidth: '500px',
-                        aspectRatio: '1 / 1',
-                        position: 'relative',
-                        filter: `drop-shadow(0 0 45px ${activeColor}40)`
-                    }}
-                >
-                    <svg viewBox="0 0 500 500" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-                        {/* Outer Orbit Ring */}
-                        <circle
-                            cx="250"
-                            cy="250"
-                            r="242"
-                            fill="none"
-                            stroke={activeColor}
-                            strokeOpacity="0.22"
-                            strokeWidth="1.5"
-                            strokeDasharray="6 8"
-                        />
-
-                        {/* 8 Radial Test Slices */}
-                        {TESTS.map((test, idx) => {
-                            const startAngle = idx * 45;
-                            const endAngle = (idx + 1) * 45;
-                            const midAngle = startAngle + 22.5;
-                            const isHovered = hoveredIdx === idx;
-                            const labelPos = polarToCartesian(250, 250, 166, midAngle);
-
-                            return (
-                                <g
-                                    key={test.id}
-                                    className="slice-group"
-                                    onMouseEnter={() => setHoveredIdx(idx)}
-                                    onMouseLeave={() => setHoveredIdx(null)}
-                                    onClick={() => handleEnterPortal(test)}
-                                    style={{
-                                        filter: isHovered ? `drop-shadow(0 0 16px ${test.color}aa)` : 'none'
-                                    }}
-                                >
-                                    <path
-                                        d={createSlicePath(250, 250, 96, 228, startAngle, endAngle)}
-                                        fill={isHovered ? `${test.color}38` : 'rgba(255, 255, 255, 0.035)'}
-                                        stroke={isHovered ? test.color : 'rgba(255, 255, 255, 0.12)'}
-                                        strokeWidth={isHovered ? '2.2' : '1.2'}
-                                        style={{ transition: 'all 0.25s ease' }}
-                                    />
-
-                                    {/* Slice Emoji */}
-                                    <text
-                                        x={labelPos.x}
-                                        y={labelPos.y - 6}
-                                        textAnchor="middle"
-                                        dominantBaseline="middle"
-                                        style={{ fontSize: isHovered ? '26px' : '22px', pointerEvents: 'none', transition: 'all 0.2s' }}
-                                    >
-                                        {test.emoji}
-                                    </text>
-
-                                    {/* Slice Short Label */}
-                                    <text
-                                        x={labelPos.x}
-                                        y={labelPos.y + 18}
-                                        textAnchor="middle"
-                                        dominantBaseline="middle"
-                                        fill={isHovered ? '#ffffff' : '#a1a1aa'}
-                                        style={{
-                                            fontSize: '10px',
-                                            fontWeight: '800',
-                                            letterSpacing: '1.2px',
-                                            pointerEvents: 'none'
-                                        }}
-                                    >
-                                        {test.short}
-                                    </text>
-                                </g>
-                            );
-                        })}
-
-                        {/* Center Dark Hub */}
-                        <circle
-                            cx="250"
-                            cy="250"
-                            r="90"
-                            fill="#07070c"
-                            stroke={activeColor}
-                            strokeWidth="2"
-                            strokeOpacity="0.65"
-                            style={{ transition: 'stroke 0.3s ease' }}
-                        />
-
-                        {/* Orbiting Active Indicator Dot */}
-                        {hoveredIdx !== null && (
-                            <circle
-                                cx={dotPos.x}
-                                cy={dotPos.y}
-                                r="5.5"
-                                fill={activeColor}
-                                style={{ filter: `drop-shadow(0 0 10px ${activeColor})` }}
-                            />
-                        )}
-
-                        {/* Center Brand / Active Test Title */}
-                        <text
-                            x="250"
-                            y="242"
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            fill="#fff"
-                            style={{ fontSize: activeTest ? '14px' : '20px', fontWeight: '900', letterSpacing: activeTest ? '0.5px' : '-0.5px' }}
-                        >
-                            {activeTest ? activeTest.title : 'vibecheck.'}
-                        </text>
-                        <text
-                            x="250"
-                            y="265"
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            fill={activeColor}
-                            style={{ fontSize: '10px', fontWeight: '800', letterSpacing: '1.5px' }}
-                        >
-                            {activeTest ? 'ENTER PORTAL →' : '8 REALMS'}
-                        </text>
-                    </svg>
-                </div>
-
-                {/* 📡 BOTTOM LIVE HUD BAR */}
-                <div style={{
-                    marginTop: '18px',
-                    minHeight: '56px',
-                    maxWidth: '420px',
-                    width: '100%',
-                    background: 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${activeTest ? activeColor + '66' : 'rgba(255,255,255,0.08)'}`,
-                    borderRadius: '18px',
-                    padding: '12px 18px',
-                    textAlign: 'center',
-                    backdropFilter: 'blur(12px)',
-                    transition: 'all 0.3s ease'
-                }}>
-                    {activeTest ? (
-                        <>
-                            <div style={{ fontSize: '14px', fontWeight: '800', color: '#fff' }}>
-                                {activeTest.emoji} {activeTest.title}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#a1a1aa', marginTop: '3px' }}>
-                                {activeTest.desc}
-                            </div>
-                        </>
-                    ) : (
-                        <div style={{ fontSize: '13px', color: '#888', lineHeight: '32px' }}>
-                            Select any portal on the wheel to launch your vibe test ✨
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
