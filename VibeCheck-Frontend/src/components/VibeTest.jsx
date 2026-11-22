@@ -1,28 +1,138 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
+
+/* 🌌 3D PERSPECTIVE NEON HORIZON CANVAS */
+const RealmBackdrop3D = ({ color }) => {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animId;
+
+        const resize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const particles = Array.from({ length: 42 }, () => ({
+            x: (Math.random() - 0.5) * 2.2,
+            y: (Math.random() - 0.5) * 2.2,
+            z: Math.random() * 14 + 1
+        }));
+
+        let offset = 0;
+
+        const render = () => {
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const horizonY = h * 0.52;
+            offset = (offset + 0.035) % 1;
+
+            ctx.fillStyle = '#040408';
+            ctx.fillRect(0, 0, w, h);
+
+            // Ambient realm aura
+            const aura = ctx.createRadialGradient(cx, horizonY, 10, cx, horizonY, Math.max(w, h) * 0.65);
+            aura.addColorStop(0, `${color}38`);
+            aura.addColorStop(0.45, `${color}10`);
+            aura.addColorStop(1, 'rgba(4,4,8,0)');
+            ctx.fillStyle = aura;
+            ctx.fillRect(0, 0, w, h);
+
+            // 3D Floor Perspective Grid
+            ctx.strokeStyle = `${color}2e`;
+            ctx.lineWidth = 1;
+
+            // Vertical receding lines
+            for (let i = -10; i <= 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(cx + i * 26, horizonY);
+                ctx.lineTo(cx + i * (w * 0.22), h);
+                ctx.stroke();
+            }
+
+            // Horizontal moving depth lines
+            for (let i = 0; i < 14; i++) {
+                const depth = (i + offset) / 14;
+                const y = horizonY + Math.pow(depth, 2.3) * (h - horizonY);
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+
+            // Floating 3D depth particles
+            particles.forEach((p) => {
+                p.z -= 0.03;
+                if (p.z <= 0.2) {
+                    p.z = 14;
+                    p.x = (Math.random() - 0.5) * 2.2;
+                    p.y = (Math.random() - 0.5) * 2.2;
+                }
+                const scale = (Math.min(w, h) * 0.65) / p.z;
+                const px = cx + p.x * scale;
+                const py = horizonY + p.y * scale;
+                const size = Math.max(1, (1 - p.z / 14) * 3.2);
+                const alpha = Math.max(0, 1 - p.z / 14) * 0.7;
+
+                ctx.fillStyle = color;
+                ctx.globalAlpha = alpha;
+                ctx.beginPath();
+                ctx.arc(px, py, size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            animId = requestAnimationFrame(render);
+        };
+
+        animId = requestAnimationFrame(render);
+        return () => {
+            cancelAnimationFrame(animId);
+            window.removeEventListener('resize', resize);
+        };
+    }, [color]);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 0,
+                pointerEvents: 'none'
+            }}
+        />
+    );
+};
 
 const CARD_THEMES = {
     noir: {
         name: 'Noir 🖤',
-        bg: 'linear-gradient(165deg, #141414 0%, #050505 60%, #1c1c1c 100%)',
-        border: 'rgba(255, 255, 255, 0.25)',
+        bg: 'linear-gradient(165deg, #16161a 0%, #050507 58%, #1c1c24 100%)',
+        border: 'rgba(255, 255, 255, 0.26)',
         accent: 'linear-gradient(45deg, #ffffff, #a1a1aa)',
         tagBg: 'rgba(255, 255, 255, 0.1)',
         tagColor: '#e4e4e7'
     },
     velvet: {
         name: 'Velvet 🌹',
-        bg: 'linear-gradient(165deg, #2b0816 0%, #090507 60%, #3a091c 100%)',
-        border: 'rgba(255, 65, 108, 0.5)',
+        bg: 'linear-gradient(165deg, #2e0717 0%, #090407 58%, #3d091f 100%)',
+        border: 'rgba(255, 65, 108, 0.55)',
         accent: 'linear-gradient(45deg, #ff416c, #ff85a2)',
         tagBg: 'rgba(255, 65, 108, 0.2)',
         tagColor: '#ff85a2'
     },
     gold: {
         name: 'Gold ✨',
-        bg: 'linear-gradient(165deg, #241a08 0%, #080705 60%, #2e2009 100%)',
-        border: 'rgba(245, 176, 65, 0.5)',
+        bg: 'linear-gradient(165deg, #291d08 0%, #080705 58%, #332309 100%)',
+        border: 'rgba(245, 176, 65, 0.55)',
         accent: 'linear-gradient(45deg, #f5b041, #fceabb)',
         tagBg: 'rgba(245, 176, 65, 0.18)',
         tagColor: '#f8c471'
@@ -33,6 +143,7 @@ const TESTS_DATA = {
     'villain-arc': {
         title: 'Your Villain Arc 🐺',
         category: "MEN'S CORNER",
+        accentColor: '#e4e4e7',
         defaultTheme: 'noir',
         questions: [
             {
@@ -83,6 +194,7 @@ const TESTS_DATA = {
     'rizz-check': {
         title: 'Rizz & Presence Check 🥂',
         category: "MEN'S CORNER",
+        accentColor: '#f5b041',
         defaultTheme: 'gold',
         questions: [
             {
@@ -133,6 +245,7 @@ const TESTS_DATA = {
     'baddie-type': {
         title: 'What Kind of Baddie Are You? 💋',
         category: "BADDIES CORNER",
+        accentColor: '#ff3b6b',
         defaultTheme: 'velvet',
         questions: [
             {
@@ -183,6 +296,7 @@ const TESTS_DATA = {
     'delulu-meter': {
         title: 'Standards vs. Delulu Meter 💅',
         category: "BADDIES CORNER",
+        accentColor: '#d946ef',
         defaultTheme: 'velvet',
         questions: [
             {
@@ -234,6 +348,7 @@ const TESTS_DATA = {
     'red-flag': {
         title: 'Red Flag Analyzer 🚩',
         category: 'CLASSIC',
+        accentColor: '#ff2e4c',
         defaultTheme: 'velvet',
         questions: [
             {
@@ -285,6 +400,7 @@ const TESTS_DATA = {
     'aura-reader': {
         title: 'Aura Reader ✨',
         category: 'CLASSIC',
+        accentColor: '#7c3aed',
         defaultTheme: 'gold',
         questions: [
             {
@@ -341,41 +457,79 @@ const VibeTest = () => {
 
     const [currentQ, setCurrentQ] = useState(0);
     const [totalScore, setTotalScore] = useState(0);
+    const [isDecoding, setIsDecoding] = useState(false);
     const [finished, setFinished] = useState(false);
     const [selectedTheme, setSelectedTheme] = useState(test?.defaultTheme || 'noir');
     const [copiedMsg, setCopiedMsg] = useState(false);
+    const [cardTilt, setCardTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50, active: false });
 
     const myUsername = localStorage.getItem('username') || 'vibecheck';
 
+    useEffect(() => {
+        setCurrentQ(0);
+        setTotalScore(0);
+        setIsDecoding(false);
+        setFinished(false);
+        setSelectedTheme(TESTS_DATA[testId]?.defaultTheme || 'noir');
+    }, [testId]);
+
     if (!test) {
         return (
-            <div style={{ minHeight: '100vh', background: '#050505', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <h2>Test not found 😅</h2>
-                <button onClick={() => navigate('/dashboard')} style={{ padding: '10px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Back to Hub</button>
+            <div style={{ minHeight: '100vh', background: '#040408', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <h2>Portal not found 😅</h2>
+                <button onClick={() => navigate('/dashboard')} style={{ padding: '12px 24px', borderRadius: '999px', border: 'none', cursor: 'pointer', fontWeight: '800', marginTop: '12px' }}>
+                    Return to Wheel
+                </button>
             </div>
         );
     }
 
+    const accent = test.accentColor || '#bc1888';
+
     const handleAnswer = (score) => {
         const nextScore = totalScore + score;
         setTotalScore(nextScore);
+
         if (currentQ + 1 < test.questions.length) {
             setCurrentQ(currentQ + 1);
         } else {
-            setFinished(true);
+            setIsDecoding(true);
+            setTimeout(() => {
+                setIsDecoding(false);
+                setFinished(true);
+            }, 1150);
         }
     };
 
     const resetTest = () => {
         setCurrentQ(0);
         setTotalScore(0);
+        setIsDecoding(false);
         setFinished(false);
+    };
+
+    const handleCardMove = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const rx = ((y - rect.height / 2) / (rect.height / 2)) * -9;
+        const ry = ((x - rect.width / 2) / (rect.width / 2)) * 9;
+        setCardTilt({
+            rx,
+            ry,
+            gx: (x / rect.width) * 100,
+            gy: (y / rect.height) * 100,
+            active: true
+        });
+    };
+
+    const handleCardLeave = () => {
+        setCardTilt({ rx: 0, ry: 0, gx: 50, gy: 50, active: false });
     };
 
     const downloadStoryCard = async () => {
         if (!cardRef.current) return;
 
-        // Auto-copy direct link
         const shareUrl = `${window.location.origin}/test/${testId}`;
         try {
             await navigator.clipboard.writeText(shareUrl);
@@ -385,9 +539,8 @@ const VibeTest = () => {
             console.log('Clipboard copy failed:', err);
         }
 
-        // Download 9:16 Card
         const canvas = await html2canvas(cardRef.current, {
-            backgroundColor: '#050505',
+            backgroundColor: '#050507',
             scale: 3
         });
         const link = document.createElement('a');
@@ -402,37 +555,154 @@ const VibeTest = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            backgroundColor: '#050505',
-            backgroundImage: 'radial-gradient(circle at 50% -20%, #4a154b 0%, #050505 55%)',
             color: '#fff',
             fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            padding: '30px 16px',
+            position: 'relative',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            padding: '76px 16px 36px 16px',
+            overflowX: 'hidden'
         }}>
-            {!finished ? (
-                <div style={{
-                    width: '100%',
-                    maxWidth: '550px',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    backdropFilter: 'blur(14px)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '24px',
-                    padding: '32px 24px',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+            <style>{`
+        @keyframes qReveal {
+          0% { opacity: 0; transform: translateY(16px) scale(0.97); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes spinPortal {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .q-stage {
+          animation: qReveal 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .hud-option {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 16px 18px;
+          background: rgba(255, 255, 255, 0.035);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          color: #f4f4f5;
+          font-size: 15px;
+          font-weight: 500;
+          text-align: left;
+          cursor: pointer;
+          transition: all 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+          backdrop-filter: blur(10px);
+        }
+        .hud-option:hover {
+          transform: translateX(6px) scale(1.015);
+          background: rgba(255, 255, 255, 0.08);
+          border-color: ${accent};
+          box-shadow: 0 0 24px ${accent}33, inset 0 0 12px ${accent}18;
+          color: #ffffff;
+        }
+        .hud-option:active {
+          transform: scale(0.98);
+        }
+      `}</style>
+
+            {/* 🌌 LIVE 3D PERSPECTIVE REALM BACKDROP */}
+            <RealmBackdrop3D color={accent} />
+
+            {/* 🛸 MINIMAL FLOATING TOP HUD */}
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                padding: '16px 24px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                zIndex: 20,
+                background: 'linear-gradient(180deg, rgba(4,4,8,0.85) 0%, transparent 100%)'
+            }}>
+                <button
+                    onClick={() => navigate('/dashboard')}
+                    style={{
+                        padding: '8px 16px',
+                        borderRadius: '999px',
+                        background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.14)',
+                        color: '#fff',
+                        fontSize: '12px',
+                        fontWeight: '800',
+                        letterSpacing: '1px',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(10px)'
+                    }}
+                >
+                    ← PORTAL HUB
+                </button>
+
+                <span style={{
+                    fontSize: '11px',
+                    fontWeight: '900',
+                    letterSpacing: '2px',
+                    color: accent,
+                    textShadow: `0 0 12px ${accent}`
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <span style={{ fontSize: '13px', color: '#a8a8a8', fontWeight: 'bold' }}>{test.title}</span>
-                        <button onClick={() => navigate('/dashboard')} style={{ background: 'transparent', border: 'none', color: '#888', cursor: 'pointer', fontSize: '14px' }}>✕ Exit</button>
+                    {test.category}
+                </span>
+            </div>
+
+            {/* ⚡ STAGE 1: 3D FLOATING QUESTION HUD */}
+            {!isDecoding && !finished && (
+                <div
+                    key={currentQ}
+                    className="q-stage"
+                    style={{
+                        position: 'relative',
+                        zIndex: 10,
+                        width: '100%',
+                        maxWidth: '580px',
+                        background: 'rgba(10, 10, 18, 0.72)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: `1px solid ${accent}44`,
+                        borderRadius: '28px',
+                        padding: '32px 26px',
+                        boxShadow: `0 30px 70px rgba(0,0,0,0.75), 0 0 40px ${accent}1f, inset 0 1px 1px rgba(255,255,255,0.18)`
+                    }}
+                >
+                    {/* Segmented Neon Progress Bar */}
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '22px' }}>
+                        {test.questions.map((_, i) => (
+                            <div
+                                key={i}
+                                style={{
+                                    flex: 1,
+                                    height: '4px',
+                                    borderRadius: '999px',
+                                    background: i <= currentQ ? accent : 'rgba(255,255,255,0.12)',
+                                    boxShadow: i <= currentQ ? `0 0 12px ${accent}` : 'none',
+                                    transition: 'all 0.35s ease'
+                                }}
+                            />
+                        ))}
                     </div>
 
-                    <div style={{ fontSize: '11px', color: '#ff66c4', fontWeight: '800', marginBottom: '10px', letterSpacing: '1.5px' }}>
-                        QUESTION {currentQ + 1} OF {test.questions.length}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '1.8px', color: accent }}>
+                            SIGNAL 0{currentQ + 1} / 0{test.questions.length}
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#a1a1aa', fontWeight: '700' }}>
+                            {test.title}
+                        </span>
                     </div>
 
-                    <h2 style={{ fontSize: '21px', margin: '0 0 24px 0', lineHeight: '1.4' }}>
+                    <h2 style={{
+                        fontSize: 'clamp(20px, 3vw, 25px)',
+                        fontWeight: '800',
+                        lineHeight: '1.35',
+                        margin: '0 0 26px 0',
+                        color: '#fff'
+                    }}>
                         {test.questions[currentQ].q}
                     </h2>
 
@@ -440,28 +710,74 @@ const VibeTest = () => {
                         {test.questions[currentQ].options.map((opt, idx) => (
                             <button
                                 key={idx}
+                                className="hud-option"
                                 onClick={() => handleAnswer(opt.score)}
-                                style={{
-                                    padding: '16px 20px',
-                                    background: 'rgba(255, 255, 255, 0.04)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    borderRadius: '14px',
-                                    color: '#fff',
-                                    fontSize: '15px',
-                                    textAlign: 'left',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.borderColor = '#bc1888'}
-                                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
                             >
-                                {opt.text}
+                                <span style={{
+                                    minWidth: '28px',
+                                    height: '28px',
+                                    borderRadius: '8px',
+                                    background: `${accent}22`,
+                                    border: `1px solid ${accent}66`,
+                                    color: accent,
+                                    fontSize: '12px',
+                                    fontWeight: '900',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    {String.fromCharCode(65 + idx)}
+                                </span>
+                                <span style={{ lineHeight: '1.4' }}>{opt.text}</span>
                             </button>
                         ))}
                     </div>
                 </div>
-            ) : (
-                <div style={{ width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            )}
+
+            {/* 🔮 STAGE 2: CINEMATIC DECODING LOADER */}
+            {isDecoding && (
+                <div style={{
+                    position: 'relative',
+                    zIndex: 10,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    padding: '40px 20px'
+                }}>
+                    <div style={{
+                        width: '110px',
+                        height: '110px',
+                        borderRadius: '50%',
+                        border: `2px dashed ${accent}`,
+                        boxShadow: `0 0 35px ${accent}66`,
+                        animation: 'spinPortal 1.4s linear infinite',
+                        marginBottom: '24px'
+                    }} />
+                    <div style={{ fontSize: '13px', fontWeight: '900', letterSpacing: '3px', color: accent }}>
+                        DECODING YOUR VIBE...
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#a1a1aa', marginTop: '8px' }}>
+                        Generating 9:16 Story Card
+                    </div>
+                </div>
+            )}
+
+            {/* 🏆 STAGE 3: HOLOGRAPHIC 3D PREVIEW + 9:16 STORY CARD */}
+            {finished && result && (
+                <div
+                    className="q-stage"
+                    style={{
+                        position: 'relative',
+                        zIndex: 10,
+                        width: '100%',
+                        maxWidth: '360px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center'
+                    }}
+                >
                     {/* 🎨 THEME SWITCHER */}
                     <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
                         {Object.keys(CARD_THEMES).map((key) => (
@@ -471,12 +787,13 @@ const VibeTest = () => {
                                 style={{
                                     padding: '8px 14px',
                                     borderRadius: '999px',
-                                    border: selectedTheme === key ? '1px solid #fff' : '1px solid rgba(255,255,255,0.15)',
-                                    background: selectedTheme === key ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.04)',
+                                    border: selectedTheme === key ? `1px solid ${accent}` : '1px solid rgba(255,255,255,0.16)',
+                                    background: selectedTheme === key ? 'rgba(255,255,255,0.14)' : 'rgba(10,10,18,0.65)',
                                     color: '#fff',
                                     fontSize: '12px',
-                                    fontWeight: 'bold',
-                                    cursor: 'pointer'
+                                    fontWeight: '800',
+                                    cursor: 'pointer',
+                                    backdropFilter: 'blur(10px)'
                                 }}
                             >
                                 {CARD_THEMES[key].name}
@@ -484,88 +801,119 @@ const VibeTest = () => {
                         ))}
                     </div>
 
-                    {/* 📸 9:16 INSTAGRAM STORY CARD 2.0 */}
+                    {/* 🧊 3D TILT WRAPPER (Preview Only — Keeps PNG Capture Razor Sharp) */}
                     <div
-                        ref={cardRef}
+                        onMouseMove={handleCardMove}
+                        onMouseLeave={handleCardLeave}
                         style={{
                             width: '100%',
-                            aspectRatio: '9 / 16',
-                            background: activeTheme.bg,
-                            border: `1.5px solid ${activeTheme.border}`,
-                            borderRadius: '28px',
-                            padding: '32px 24px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            textAlign: 'center',
-                            boxShadow: '0 25px 60px rgba(0,0,0,0.75)',
-                            boxSizing: 'border-box'
+                            perspective: '1000px'
                         }}
                     >
-                        {/* Top Tag */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '900', letterSpacing: '-0.5px' }}>
-                                vibecheck<span style={{ color: '#bc1888' }}>.</span>
-                            </span>
-                            <span style={{
-                                fontSize: '10px',
-                                fontWeight: '800',
-                                letterSpacing: '1.2px',
-                                padding: '5px 10px',
-                                borderRadius: '999px',
-                                background: activeTheme.tagBg,
-                                color: activeTheme.tagColor
-                            }}>
-                                {test.category}
-                            </span>
-                        </div>
-
-                        {/* Center Verdict */}
-                        <div>
-                            <div style={{ fontSize: '12px', color: '#a1a1aa', letterSpacing: '2px', marginBottom: '12px', textTransform: 'uppercase' }}>
-                                {test.title}
-                            </div>
-                            <h1 style={{
-                                fontSize: '30px',
-                                fontWeight: '900',
-                                lineHeight: '1.2',
-                                background: activeTheme.accent,
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                margin: '0 0 14px 0'
-                            }}>
-                                {result.badge}
-                            </h1>
+                        <div
+                            style={{
+                                transform: `rotateX(${cardTilt.rx}deg) rotateY(${cardTilt.ry}deg)`,
+                                transition: cardTilt.active ? 'transform 0.08s linear' : 'transform 0.4s ease',
+                                transformStyle: 'preserve-3d',
+                                position: 'relative',
+                                borderRadius: '28px'
+                            }}
+                        >
+                            {/* Glossy Holographic Glare Overlay (Outside cardRef) */}
                             <div style={{
-                                display: 'inline-block',
-                                fontSize: '13px',
-                                fontStyle: 'italic',
-                                color: activeTheme.tagColor,
-                                marginBottom: '18px'
-                            }}>
-                                "{result.motto}"
-                            </div>
-                            <p style={{ color: '#d4d4d8', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-                                {result.desc}
-                            </p>
-                        </div>
+                                position: 'absolute',
+                                inset: 0,
+                                borderRadius: '28px',
+                                pointerEvents: 'none',
+                                zIndex: 5,
+                                background: `radial-gradient(circle at ${cardTilt.gx}% ${cardTilt.gy}%, rgba(255,255,255,${cardTilt.active ? 0.16 : 0}), transparent 55%)`,
+                                transition: 'background 0.15s ease'
+                            }} />
 
-                        {/* 🔗 HYBRID STICKER-READY PILL */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
-                            <div style={{
-                                width: '100%',
-                                padding: '12px 16px',
-                                borderRadius: '14px',
-                                background: 'rgba(255,255,255,0.06)',
-                                border: `1px solid ${activeTheme.border}`,
-                                fontSize: '12px',
-                                fontWeight: '800',
-                                letterSpacing: '0.8px',
-                                color: '#fff'
-                            }}>
-                                🔗 vibecheck • take this test →
+                            {/* 📸 9:16 INSTAGRAM STORY CARD (Captured by html2canvas) */}
+                            <div
+                                ref={cardRef}
+                                style={{
+                                    width: '100%',
+                                    aspectRatio: '9 / 16',
+                                    background: activeTheme.bg,
+                                    border: `1.5px solid ${activeTheme.border}`,
+                                    borderRadius: '28px',
+                                    padding: '32px 24px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                    textAlign: 'center',
+                                    boxShadow: `0 28px 65px rgba(0,0,0,0.8), 0 0 35px ${accent}25`,
+                                    boxSizing: 'border-box'
+                                }}
+                            >
+                                {/* Top Brand + Category */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: '900', letterSpacing: '-0.5px', color: '#fff' }}>
+                                        vibecheck<span style={{ color: '#bc1888' }}>.</span>
+                                    </span>
+                                    <span style={{
+                                        fontSize: '10px',
+                                        fontWeight: '800',
+                                        letterSpacing: '1.2px',
+                                        padding: '5px 10px',
+                                        borderRadius: '999px',
+                                        background: activeTheme.tagBg,
+                                        color: activeTheme.tagColor
+                                    }}>
+                                        {test.category}
+                                    </span>
+                                </div>
+
+                                {/* Center Verdict */}
+                                <div>
+                                    <div style={{ fontSize: '12px', color: '#a1a1aa', letterSpacing: '2px', marginBottom: '12px', textTransform: 'uppercase' }}>
+                                        {test.title}
+                                    </div>
+                                    <h1 style={{
+                                        fontSize: '30px',
+                                        fontWeight: '900',
+                                        lineHeight: '1.2',
+                                        background: activeTheme.accent,
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        margin: '0 0 14px 0'
+                                    }}>
+                                        {result.badge}
+                                    </h1>
+                                    <div style={{
+                                        display: 'inline-block',
+                                        fontSize: '13px',
+                                        fontStyle: 'italic',
+                                        color: activeTheme.tagColor,
+                                        marginBottom: '18px'
+                                    }}>
+                                        "{result.motto}"
+                                    </div>
+                                    <p style={{ color: '#d4d4d8', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
+                                        {result.desc}
+                                    </p>
+                                </div>
+
+                                {/* 🔗 HYBRID STICKER-READY PILL */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                                    <div style={{
+                                        width: '100%',
+                                        padding: '12px 16px',
+                                        borderRadius: '14px',
+                                        background: 'rgba(255,255,255,0.06)',
+                                        border: `1px solid ${activeTheme.border}`,
+                                        fontSize: '12px',
+                                        fontWeight: '800',
+                                        letterSpacing: '0.8px',
+                                        color: '#fff'
+                                    }}>
+                                        🔗 vibecheck • take this test →
+                                    </div>
+                                    <span style={{ fontSize: '11px', color: '#a1a1aa' }}>@{myUsername}</span>
+                                </div>
                             </div>
-                            <span style={{ fontSize: '11px', color: '#a1a1aa' }}>@{myUsername}</span>
                         </div>
                     </div>
 
@@ -580,15 +928,41 @@ const VibeTest = () => {
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: '16px',
-                                fontWeight: 'bold',
+                                fontWeight: '800',
                                 fontSize: '14px',
-                                cursor: 'pointer'
+                                cursor: 'pointer',
+                                boxShadow: '0 8px 25px rgba(188, 24, 136, 0.45)'
                             }}
                         >
                             {copiedMsg ? 'Saved + Link Copied! Paste on IG 🔗' : 'Save 9:16 Story Card 📸'}
                         </button>
-                        <button onClick={resetTest} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', cursor: 'pointer' }}>🔄</button>
-                        <button onClick={() => navigate('/dashboard')} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px', fontWeight: 'bold', cursor: 'pointer' }}>Hub</button>
+                        <button
+                            onClick={resetTest}
+                            style={{
+                                padding: '14px 16px',
+                                background: 'rgba(255,255,255,0.08)',
+                                color: '#fff',
+                                border: '1px solid rgba(255,255,255,0.16)',
+                                borderRadius: '16px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            🔄
+                        </button>
+                        <button
+                            onClick={() => navigate('/dashboard')}
+                            style={{
+                                padding: '14px 16px',
+                                background: 'rgba(255,255,255,0.08)',
+                                color: '#fff',
+                                border: '1px solid rgba(255,255,255,0.16)',
+                                borderRadius: '16px',
+                                fontWeight: '800',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Hub
+                        </button>
                     </div>
                 </div>
             )}
