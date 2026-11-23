@@ -153,7 +153,7 @@ const CorridorTunnel3D = ({ test }) => {
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const myUsername = localStorage.getItem('username') || 'vibecheck';
+    const myUsername = localStorage.getItem('username');
 
     const [searchQuery, setSearchQuery] = useState('');
     const [hoveredIdx, setHoveredIdx] = useState(null);
@@ -171,7 +171,7 @@ const Dashboard = () => {
             color: '#ff2e93',
             bg: 'radial-gradient(circle at 50% 20%, #7a0944 0%, #1a0614 55%, #07050a 100%)',
             pattern: 'repeating-linear-gradient(45deg, rgba(255,46,147,0.08) 0px, rgba(255,46,147,0.08) 1px, transparent 1px, transparent 22px)',
-            route: `/${myUsername}`
+            route: myUsername ? `/${myUsername}` : '/'
         },
         {
             id: 'mbti',
@@ -627,7 +627,7 @@ const Dashboard = () => {
                     </form>
 
                     <button
-                        onClick={() => navigate(`/${myUsername}`)}
+                        onClick={() => navigate(myUsername ? `/${myUsername}` : '/')}
                         style={{
                             padding: '8px 16px',
                             background: 'rgba(10, 10, 16, 0.72)',
@@ -640,7 +640,7 @@ const Dashboard = () => {
                             fontSize: '12px'
                         }}
                     >
-                        @{myUsername}
+                        {myUsername ? `@${myUsername}` : 'Login 👤'}
                     </button>
                 </div>
             </div>
