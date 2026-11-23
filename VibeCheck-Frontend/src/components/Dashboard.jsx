@@ -153,7 +153,7 @@ const CorridorTunnel3D = ({ test }) => {
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const myUsername = localStorage.getItem('username');
+    const myUsername = localStorage.getItem('vibe_username') || localStorage.getItem('username');
 
     const [searchQuery, setSearchQuery] = useState('');
     const [hoveredIdx, setHoveredIdx] = useState(null);

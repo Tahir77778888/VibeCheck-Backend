@@ -462,8 +462,7 @@ const VibeTest = () => {
     const [selectedTheme, setSelectedTheme] = useState(test?.defaultTheme || 'noir');
     const [copiedMsg, setCopiedMsg] = useState(false);
     const [cardTilt, setCardTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50, active: false });
-
-    const myUsername = localStorage.getItem('username') || 'vibecheck';
+    const myUsername = localStorage.getItem('vibe_username') || localStorage.getItem('username') || 'vibecheck';
 
     useEffect(() => {
         setCurrentQ(0);
