@@ -155,6 +155,11 @@ function Profile() {
     const [submitting, setSubmitting] = useState(false);
     const [sentBanner, setSentBanner] = useState(false);
 
+    // DP Upload States
+    const [isUploading, setIsUploading] = useState(false);
+    const [dpPreview, setDpPreview] = useState('');
+    const [dpStatus, setDpStatus] = useState('');
+
     // Custom Q&A States
     const [customAnswer, setCustomAnswer] = useState('');
     const [isEditingQ, setIsEditingQ] = useState(false);
@@ -162,15 +167,15 @@ function Profile() {
 
     // Share & 9:16 Story Modal States
     const [linkCopied, setLinkCopied] = useState(false);
-    const [storyModalData, setStoryModalData] = useState(null); // { type: 'message' | 'profile', item?: object }
+    const [storyModalData, setStoryModalData] = useState(null);
     const [selectedTheme, setSelectedTheme] = useState('velvet');
     const [storySavedMsg, setStorySavedMsg] = useState(false);
     const [cardTilt, setCardTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50, active: false });
 
+    const fileInputRef = useRef(null);
     const storyCardRef = useRef(null);
     const accent = '#ff2e93';
 
-    // Check if logged in user is the owner
     const loggedInUser = localStorage.getItem('vibe_username') || localStorage.getItem('username');
     const isOwner = loggedInUser && loggedInUser.toLowerCase() === username.toLowerCase();
 
@@ -219,6 +224,46 @@ function Profile() {
                 setNotFound(true);
                 setLoading(false);
             });
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            setDpStatus('Please select an image file.');
+            return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+            setDpStatus('Image size 2MB se kam rakho.');
+            return;
+        }
+
+        const localUrl = URL.createObjectURL(file);
+        setDpPreview(localUrl);
+        setIsUploading(true);
+        setDpStatus('Uploading DP...');
+
+        try {
+            const formData = new FormData();
+            formData.append('profilePic', file);
+
+            await axios.post(
+                `https://vibecheck-backend-n4yi.onrender.com/api/users/${username}/profile-pic`,
+                formData,
+                { headers: { 'Content-Type': 'multipart/form-data' } }
+            );
+
+            setDpStatus('DP Updated! ✨');
+            fetchProfile();
+        } catch (err) {
+            console.error('DP upload error:', err);
+            setDpStatus('Backend DP endpoint check karo (preview active).');
+        } finally {
+            setIsUploading(false);
+            setTimeout(() => setDpStatus(''), 3500);
+        }
     };
 
     const submitVibeCheck = async () => {
@@ -446,7 +491,6 @@ function Profile() {
                     }}
                 >
                     <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '340px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        {/* Theme Selector */}
                         <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
                             {Object.keys(CARD_THEMES).map((key) => (
                                 <button
@@ -468,7 +512,6 @@ function Profile() {
                             ))}
                         </div>
 
-                        {/* 3D Tilt Wrapper */}
                         <div onMouseMove={handleCardMove} onMouseLeave={handleCardLeave} style={{ width: '100%', perspective: '1000px' }}>
                             <div style={{
                                 transform: `rotateX(${cardTilt.rx}deg) rotateY(${cardTilt.ry}deg)`,
@@ -485,7 +528,6 @@ function Profile() {
                                     background: `radial-gradient(circle at ${cardTilt.gx}% ${cardTilt.gy}%, rgba(255,255,255,${cardTilt.active ? 0.16 : 0}), transparent 55%)`
                                 }} />
 
-                                {/* 9:16 Capture Canvas */}
                                 <div
                                     ref={storyCardRef}
                                     style={{
@@ -668,23 +710,62 @@ function Profile() {
             {!loading && userData && userData.user && (
                 <div className="vibe-panel" style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '18px', margin: '0 auto' }}>
 
-                    {/* 1. HEADER CARD */}
+                    {/* 1. HEADER CARD + DP UPLOAD */}
                     <div style={{ ...glassCardStyle, textAlign: 'center', position: 'relative' }}>
-                        <div style={{
-                            width: '104px',
-                            height: '104px',
-                            borderRadius: '50%',
-                            padding: '3px',
-                            background: 'linear-gradient(45deg, #f09433, #bc1888)',
-                            margin: '0 auto 14px auto',
-                            boxShadow: '0 0 30px rgba(255, 46, 147, 0.35)'
-                        }}>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            style={{ display: 'none' }}
+                        />
+
+                        <div
+                            onClick={() => isOwner && !isUploading && fileInputRef.current?.click()}
+                            style={{
+                                width: '104px',
+                                height: '104px',
+                                borderRadius: '50%',
+                                padding: '3px',
+                                background: 'linear-gradient(45deg, #f09433, #bc1888)',
+                                margin: '0 auto 12px auto',
+                                boxShadow: '0 0 30px rgba(255, 46, 147, 0.35)',
+                                cursor: isOwner ? 'pointer' : 'default'
+                            }}
+                        >
                             <img
-                                src={userData.user.profilePic || 'https://via.placeholder.com/150'}
+                                src={dpPreview || userData.user.profilePic || 'https://via.placeholder.com/150'}
                                 alt={userData.user.name}
                                 style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover', backgroundColor: '#0a0a12' }}
                             />
                         </div>
+
+                        {isOwner && (
+                            <div style={{ marginBottom: '12px' }}>
+                                <button
+                                    type="button"
+                                    disabled={isUploading}
+                                    onClick={() => fileInputRef.current?.click()}
+                                    style={{
+                                        padding: '6px 14px',
+                                        borderRadius: '999px',
+                                        background: 'rgba(255, 255, 255, 0.07)',
+                                        border: '1px solid rgba(255, 255, 255, 0.18)',
+                                        color: '#fff',
+                                        fontSize: '11px',
+                                        fontWeight: '800',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {isUploading ? 'Uploading... ⏳' : 'Change DP 📷'}
+                                </button>
+                                {dpStatus && (
+                                    <div style={{ fontSize: '11px', color: '#ff85a2', marginTop: '6px', fontWeight: '700' }}>
+                                        {dpStatus}
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <h2 style={{ margin: '0 0 4px 0', fontSize: '23px', fontWeight: '900', letterSpacing: '-0.5px' }}>
                             {userData.user.name}
@@ -856,10 +937,9 @@ function Profile() {
                         )}
                     </div>
 
-                    {/* 4. 10-QUESTION CROWD POLL DECK (Visitors) */}
+                    {/* 4. 10-QUESTION CROWD POLL DECK */}
                     {!isOwner && (
                         <div style={glassCardStyle}>
-                            {/* 10 Segmented Progress Bars */}
                             <div style={{ display: 'flex', gap: '5px', marginBottom: '16px' }}>
                                 {pollQuestions.map((pq, i) => (
                                     <div
@@ -934,7 +1014,7 @@ function Profile() {
                         </div>
                     )}
 
-                    {/* 5. VIBE METER & ANONYMOUS HYPE BOX (Visitors) */}
+                    {/* 5. VIBE METER & ANONYMOUS HYPE BOX */}
                     {!isOwner && (
                         <div style={glassCardStyle}>
                             <h3 style={{ margin: '0 0 16px 0', fontSize: '15px', fontWeight: '800' }}>Rate Their Vibe ⚡</h3>
