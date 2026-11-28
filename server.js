@@ -33,6 +33,8 @@ app.use('/api/ratings', ratingRoutes);
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
 // Test Route
 app.get('/', (req, res) => {
     res.send('VibeCheck API is running like a rocket! 🚀');

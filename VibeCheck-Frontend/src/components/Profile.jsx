@@ -225,7 +225,6 @@ function Profile() {
                 setLoading(false);
             });
     };
-
     const handleFileChange = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -235,8 +234,8 @@ function Profile() {
             return;
         }
 
-        if (file.size > 2 * 1024 * 1024) {
-            setDpStatus('Image size 2MB se kam rakho.');
+        if (file.size > 4 * 1024 * 1024) {
+            setDpStatus('Image size 4MB se kam rakho.');
             return;
         }
 
@@ -245,26 +244,66 @@ function Profile() {
         setIsUploading(true);
         setDpStatus('Uploading DP...');
 
-        try {
-            const formData = new FormData();
-            formData.append('profilePic', file);
+        const compressToBase64 = (imgFile) =>
+            new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const maxSize = 400;
+                        let { width, height } = img;
 
-            await axios.post(
-                `https://vibecheck-backend-n4yi.onrender.com/api/users/${username}/profile-pic`,
-                formData,
-                { headers: { 'Content-Type': 'multipart/form-data' } }
+                        if (width > height && width > maxSize) {
+                            height = Math.round((height * maxSize) / width);
+                            width = maxSize;
+                        } else if (height >= width && height > maxSize) {
+                            width = Math.round((width * maxSize) / height);
+                            height = maxSize;
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.82));
+                    };
+                    img.onerror = reject;
+                    img.src = event.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(imgFile);
+            });
+
+        try {
+            const cleanUsername = username.replace('@', '');
+            const compressedBase64 = await compressToBase64(file);
+
+            const res = await axios.post(
+                `https://vibecheck-backend-n4yi.onrender.com/api/users/${cleanUsername}/profile-pic`,
+                { profilePic: compressedBase64 }
             );
 
-            setDpStatus('DP Updated! ✨');
+            const savedUrl = res.data?.profilePic || res.data?.user?.profilePic || compressedBase64;
+            setUserData((prev) =>
+                prev
+                    ? { ...prev, user: { ...prev.user, profilePic: savedUrl } }
+                    : prev
+            );
+            setDpPreview('');
+            setDpStatus('DP Saved! ✨');
             fetchProfile();
         } catch (err) {
             console.error('DP upload error:', err);
-            setDpStatus('Backend DP endpoint check karo (preview active).');
+            setDpStatus('Upload failed — backend route check karo.');
         } finally {
             setIsUploading(false);
             setTimeout(() => setDpStatus(''), 3500);
         }
     };
+
+
+
 
     const submitVibeCheck = async () => {
         if (submitting) return;

@@ -23,6 +23,38 @@ router.post('/create', async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 });
+const User = require('../models/User');
+
+// POST /api/users/:username/profile-pic
+router.post('/:username/profile-pic', async (req, res) => {
+    try {
+        const cleanUsername = req.params.username.replace(/^@/, '').toLowerCase();
+        const { profilePic } = req.body;
+
+        if (!profilePic || typeof profilePic !== 'string') {
+            return res.status(400).json({ message: 'Valid profilePic image is required.' });
+        }
+
+        const updatedUser = await User.findOneAndUpdate(
+            { username: cleanUsername },
+            { $set: { profilePic } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        return res.status(200).json({
+            message: 'Profile picture updated!',
+            profilePic: updatedUser.profilePic,
+            user: updatedUser
+        });
+    } catch (err) {
+        console.error('Error updating profilePic:', err);
+        return res.status(500).json({ message: 'Failed to update profile picture.' });
+    }
+});
 // routes/users.js mein kisi bhi API ke neeche yeh add kar do
 router.post('/:username/update-question', async (req, res) => {
     try {

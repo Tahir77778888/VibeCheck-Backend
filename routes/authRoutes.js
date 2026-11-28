@@ -6,7 +6,38 @@ require('dotenv').config();
 
 // Google Client initialize kar rahe hain
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const User = require('../models/User');
 
+// POST /api/users/:username/profile-pic
+router.post('/:username/profile-pic', async (req, res) => {
+    try {
+        const cleanUsername = req.params.username.replace(/^@/, '').toLowerCase();
+        const { profilePic } = req.body;
+
+        if (!profilePic || typeof profilePic !== 'string') {
+            return res.status(400).json({ message: 'Valid profilePic image is required.' });
+        }
+
+        const updatedUser = await User.findOneAndUpdate(
+            { username: cleanUsername },
+            { $set: { profilePic } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        return res.status(200).json({
+            message: 'Profile picture updated!',
+            profilePic: updatedUser.profilePic,
+            user: updatedUser
+        });
+    } catch (err) {
+        console.error('Error updating profilePic:', err);
+        return res.status(500).json({ message: 'Failed to update profile picture.' });
+    }
+});
 // Google Login Route (POST request)
 router.post('/google', async (req, res) => {
     const { token } = req.body;
