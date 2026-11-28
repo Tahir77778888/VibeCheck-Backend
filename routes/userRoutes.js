@@ -2,14 +2,13 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Rating = require('../models/Rating');
-const { upload } = require('../config/cloudinary'); // Cloudinary import kar liya
+const { upload } = require('../config/cloudinary');
 
 // Route 1: Naya Account Banana (POST /api/users/create)
 router.post('/create', async (req, res) => {
     try {
         const { name, username } = req.body;
 
-        // Check karna ki username pehle se toh nahi hai
         const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ message: "Username already taken bhai." });
@@ -23,20 +22,20 @@ router.post('/create', async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 });
-const User = require('../models/User');
 
-// POST /api/users/:username/profile-pic
+// POST /api/users/:username/profile-pic (Base64 / URL image update)
 router.post('/:username/profile-pic', async (req, res) => {
     try {
-        const cleanUsername = req.params.username.replace(/^@/, '').toLowerCase();
+        const cleanUsername = req.params.username.replace(/^@/, '').trim();
         const { profilePic } = req.body;
 
         if (!profilePic || typeof profilePic !== 'string') {
             return res.status(400).json({ message: 'Valid profilePic image is required.' });
         }
 
+        const escapedUsername = cleanUsername.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const updatedUser = await User.findOneAndUpdate(
-            { username: cleanUsername },
+            { username: new RegExp(`^${escapedUsername}$`, 'i') },
             { $set: { profilePic } },
             { new: true }
         );
@@ -55,7 +54,8 @@ router.post('/:username/profile-pic', async (req, res) => {
         return res.status(500).json({ message: 'Failed to update profile picture.' });
     }
 });
-// routes/users.js mein kisi bhi API ke neeche yeh add kar do
+
+// Update Custom Question
 router.post('/:username/update-question', async (req, res) => {
     try {
         const { question } = req.body;
@@ -73,28 +73,24 @@ router.post('/:username/update-question', async (req, res) => {
 // Route 2: Profile aur saare Secret Comments fetch karna (GET /api/users/:username)
 router.get('/:username', async (req, res) => {
     try {
-        // 1. User ko database mein dhundo
         const user = await User.findOne({ username: req.params.username });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // 2. Is user ke saare secret ratings aur comments dhundo (Naye comments pehle dikhenge)
         const ratings = await Rating.find({ userId: user._id }).sort({ createdAt: -1 });
 
-        // 3. Average scores calculate karo
         let averageScores = { trust: 50, vibe: 50, intellect: 50, humor: 50 };
 
         if (ratings.length > 0) {
             let total = { trust: 0, vibe: 0, intellect: 0, humor: 0 };
-            ratings.forEach(r => {
+            ratings.forEach((r) => {
                 total.trust += r.scores.trust || 0;
                 total.vibe += r.scores.vibe || 0;
                 total.intellect += r.scores.intellect || 0;
                 total.humor += r.scores.humor || 0;
             });
 
-            // Math.round se exact integer value aayegi
             averageScores = {
                 trust: Math.round(total.trust / ratings.length),
                 vibe: Math.round(total.vibe / ratings.length),
@@ -103,27 +99,24 @@ router.get('/:username', async (req, res) => {
             };
         }
 
-        // 4. Sab kuch ek sath frontend ko bhej do
         res.json({
             user: user,
             averageScores: averageScores,
             ratings: ratings
         });
-
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error in fetching profile", error: error.message });
     }
 });
 
-// Route 3 (NAYA ROUTE): Profile Photo Upload karne ke liye (POST /api/users/:username/upload)
+// Route 3: Cloudinary Multipart Photo Upload (POST /api/users/:username/upload)
 router.post('/:username/upload', upload.single('profilePic'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: "Photo upload nahi hui bhai!" });
         }
 
-        // Cloudinary se jo secure link mili (req.file.path), usko database mein save kar do
         const updatedUser = await User.findOneAndUpdate(
             { username: req.params.username },
             { profilePic: req.file.path },
